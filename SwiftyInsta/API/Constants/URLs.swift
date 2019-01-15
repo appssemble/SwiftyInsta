@@ -72,6 +72,8 @@ struct URLs {
     private static let removeProfilePicture = "/accounts/remove_profile_picture/"
     private static let changeProfilePicture = "/accounts/change_profile_picture/"
     private static let editMedia = "/media/%@/edit_media/"
+    private static let createLive = "/live/create/"
+    private static let startLive = "/live/%@/start/"
     
     // MARK: - Methods
     
@@ -80,6 +82,18 @@ struct URLs {
             return url
         }
         throw CustomErrors.urlCreationFaild("Cant create URL for instagram main url.")
+    }
+    
+    static func getCreateLiveUrl() throws -> URL {
+        if let url = URL(string: instagramUrl + api + apiVersion + createLive) {
+            return url
+        }
+        
+        throw CustomErrors.urlCreationFaild("Cant create URL for create live.")
+    }
+    
+    static func getStartLiveUrl() -> String {
+        return instagramUrl + api + apiVersion + startLive
     }
     
     static func getCreateAccountUrl() throws -> URL {

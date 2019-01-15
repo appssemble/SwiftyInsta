@@ -8,6 +8,11 @@
 
 import Foundation
 
+public protocol LiveStreamProtocol {
+    func createLive(completion: @escaping CreateLiveBroadcastClosure)
+    func startLive(broadcastID: Int64, completion: @escaping StartLiveBroadcastClosure)
+}
+
 public protocol APIHandlerProtocol:
     UserHandlerProtocol,
     ProfileHandlerProtocol,
@@ -15,8 +20,22 @@ public protocol APIHandlerProtocol:
     MediaHandlerProtocol,
     MessageHandlerProtocol,
     CommentHandlerProtocol,
+    LiveStreamProtocol,
     StoryHandlerProtocol {
 }
+
+public enum CreateLiveBroadcastEnum {
+    case success(liveBroadcastResponse: CreateLiveBroadcastResponse)
+    case failure(error: Error?)
+}
+
+public enum StartLiveBroadcastEnum {
+    case success(liveBroadcastResponse: StartLiveBroadcastResponse)
+    case failure(error: Error?)
+}
+
+public typealias CreateLiveBroadcastClosure = (_ response: CreateLiveBroadcastEnum) -> (Void)
+public typealias StartLiveBroadcastClosure = (_ response: StartLiveBroadcastEnum) -> (Void)
 
 public class APIHandler: APIHandlerProtocol {
     
@@ -48,6 +67,42 @@ public class APIHandler: APIHandlerProtocol {
         
         try UserHandler.shared.login { (result, cache) in
             completion(result, cache)
+        }
+    }
+    
+    public func createLive(completion: @escaping CreateLiveBroadcastClosure) {
+        HandlerSettings.shared.httpHelper!.sendAsync(method: .post, url: try! URLs.getCreateLiveUrl(), body: [:], header: [:], completion: { (data, response, error) in
+            if let error = error {
+                completion(.failure(error: error))
+            } else {
+                do {
+                    let jsonDecoder = JSONDecoder()
+                    let liveBroadcastResponse = try jsonDecoder.decode(CreateLiveBroadcastResponse.self, from: data!)
+                    completion(.success(liveBroadcastResponse: liveBroadcastResponse))
+                } catch {
+                    completion(.failure(error: error))
+                }
+            }
+        })
+    }
+    
+    public func startLive(broadcastID: Int64, completion: @escaping StartLiveBroadcastClosure) {
+        let baseUrl = URLs.getStartLiveUrl()
+        let formattedUrl = URL(string: String(format: baseUrl, String(broadcastID)))
+        if let url = formattedUrl {
+            HandlerSettings.shared.httpHelper!.sendAsync(method: .post, url: url, body: [:], header: [:]) { (data, response, error) in
+                if let error = error {
+                    completion(.failure(error: error))
+                } else {
+                    do {
+                        let jsonDecoder = JSONDecoder()
+                        let liveBroadcastResponse = try jsonDecoder.decode(StartLiveBroadcastResponse.self, from: data!)
+                        completion(.success(liveBroadcastResponse: liveBroadcastResponse))
+                    } catch {
+                        completion(.failure(error: error))
+                    }
+                }
+            }
         }
     }
     

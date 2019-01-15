@@ -81,6 +81,8 @@
 		11DDE51F21A1F94B00754F0F /* AndroidVersion.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11DDE51E21A1F94B00754F0F /* AndroidVersion.swift */; };
 		11E2B135218F13D20095374A /* UserShortListModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11E2B134218F13D20095374A /* UserShortListModel.swift */; };
 		11F0CE6B2195CC2400C0F6A4 /* TimeLineModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11F0CE6A2195CC2400C0F6A4 /* TimeLineModel.swift */; };
+		C60B155B21ECCFE000476FE2 /* CreateLiveBroadcastResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = C60B155A21ECCFE000476FE2 /* CreateLiveBroadcastResponse.swift */; };
+		C692808821EDC2BF00DF8153 /* StartLiveBroadcastResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = C692808721EDC2BF00DF8153 /* StartLiveBroadcastResponse.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -171,6 +173,8 @@
 		11DDE51E21A1F94B00754F0F /* AndroidVersion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AndroidVersion.swift; sourceTree = "<group>"; };
 		11E2B134218F13D20095374A /* UserShortListModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserShortListModel.swift; sourceTree = "<group>"; };
 		11F0CE6A2195CC2400C0F6A4 /* TimeLineModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimeLineModel.swift; sourceTree = "<group>"; };
+		C60B155A21ECCFE000476FE2 /* CreateLiveBroadcastResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreateLiveBroadcastResponse.swift; sourceTree = "<group>"; };
+		C692808721EDC2BF00DF8153 /* StartLiveBroadcastResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StartLiveBroadcastResponse.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -333,6 +337,8 @@
 				11D2AE0921A02023007D7F1F /* CreateAccountModel.swift */,
 				115CA6DE21B0214800769B00 /* EditProfileModel.swift */,
 				116B149E21DEB64B00953A71 /* SessionCache.swift */,
+				C60B155A21ECCFE000476FE2 /* CreateLiveBroadcastResponse.swift */,
+				C692808721EDC2BF00DF8153 /* StartLiveBroadcastResponse.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -509,6 +515,7 @@
 			files = (
 				1104CD0D218062DD00F855BA /* AndroidDeviceModel.swift in Sources */,
 				115F124A217FEBD600ED3530 /* APIBuilder.swift in Sources */,
+				C60B155B21ECCFE000476FE2 /* CreateLiveBroadcastResponse.swift in Sources */,
 				114B848421871E9B00F84161 /* PhoneVerificationSettingsModel.swift in Sources */,
 				1143E0C821809E7700D9FF31 /* ResponseTypes.swift in Sources */,
 				11AE440421A99CD400BD9EFB /* FeedHandler.swift in Sources */,
@@ -572,6 +579,7 @@
 				115F1253217FEFF200ED3530 /* SessionStorage.swift in Sources */,
 				1104CD092180621400F855BA /* HTTPMethods.swift in Sources */,
 				11E2B135218F13D20095374A /* UserShortListModel.swift in Sources */,
+				C692808821EDC2BF00DF8153 /* StartLiveBroadcastResponse.swift in Sources */,
 				11B8518F219F5208009527CD /* UploadMediaModel.swift in Sources */,
 				11AE440921A99CD400BD9EFB /* MediaHandler.swift in Sources */,
 				115CA6DD21AFFB2700769B00 /* GenderTypes.swift in Sources */,

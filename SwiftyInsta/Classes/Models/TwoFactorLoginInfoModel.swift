@@ -9,13 +9,13 @@
 import Foundation
 
 public struct TwoFactorLoginInfoModel: Codable {
-    public var obfuscatedPhoneNumber: Int
+    public var obfuscatedPhoneNumber: String
     public var showMessengerCodeOption: Bool
     public var twoFactorIdentifier: String
     public var username: String
     public var phoneVerificationSettings: PhoneVerificationSettingsModel
     
-    public init(obfuscatedPhoneNumber: Int, showMessengerCodeOption: Bool, twoFactorIdentifier: String, username: String, phoneVerificationSettings: PhoneVerificationSettingsModel) {
+    public init(obfuscatedPhoneNumber: String, showMessengerCodeOption: Bool, twoFactorIdentifier: String, username: String, phoneVerificationSettings: PhoneVerificationSettingsModel) {
         self.obfuscatedPhoneNumber = obfuscatedPhoneNumber
         self.showMessengerCodeOption = showMessengerCodeOption
         self.twoFactorIdentifier = twoFactorIdentifier
@@ -25,7 +25,7 @@ public struct TwoFactorLoginInfoModel: Codable {
     
     static func empty() -> TwoFactorLoginInfoModel {
         return TwoFactorLoginInfoModel(
-            obfuscatedPhoneNumber: 0,
+            obfuscatedPhoneNumber: "0",
             showMessengerCodeOption: false,
             twoFactorIdentifier: "",
             username: "",

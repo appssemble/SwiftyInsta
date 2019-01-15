@@ -100,7 +100,7 @@ class UserHandler: UserHandlerProtocol {
                             if response?.statusCode != 200 {
                                 do {
                                     let loginFailReason = try decoder.decode(LoginBaseResponseModel.self, from: data)
-                                    if loginFailReason.invalidCredentials ?? false || loginFailReason.errorType! == "bad_password" {
+                                    if loginFailReason.invalidCredentials ?? false || loginFailReason.errorType == "bad_password" {
                                         let value = (loginFailReason.errorType == "bad_password" ? LoginResultModel.badPassword : LoginResultModel.invalidUser)
                                         completion(Return.fail(error: CustomErrors.invalidCredentials, response: .fail, value: value), nil)
                                         
@@ -108,7 +108,7 @@ class UserHandler: UserHandlerProtocol {
                                         HandlerSettings.shared.twoFactor = loginFailReason.twoFactorInfo
                                         completion(Return.fail(error: CustomErrors.twoFactorAuthentication, response: .ok, value: .twoFactorRequired), nil)
                                         
-                                    } else if loginFailReason.checkpointChallengeRequired ?? false || loginFailReason.errorType! == "checkpoint_challenge_required" {
+                                    } else if loginFailReason.checkpointChallengeRequired ?? false || loginFailReason.errorType == "checkpoint_challenge_required" {
                                         HandlerSettings.shared.challenge = loginFailReason.challenge
                                         completion(Return.fail(error: CustomErrors.challengeRequired, response: .ok, value: .challengeRequired), nil)
                                     } else {

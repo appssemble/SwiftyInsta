@@ -9,8 +9,8 @@
 import Foundation
 
 public class CreateLiveBroadcastResponse: Decodable {
-    var broadcastID: Int64
-    var uploadUrl: String
+    public var broadcastID: Int64
+    public var uploadUrl: String
     
     private enum CodingKeys: String, CodingKey {
         case broadcastID = "broadcast_id"

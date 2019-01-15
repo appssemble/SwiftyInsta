@@ -9,8 +9,8 @@
 import Foundation
 
 public class StartLiveBroadcastResponse: Decodable {
-    var mediaID: String
-    var status: String
+    public var mediaID: String
+    public var status: String
 
     private enum CodingKeys: String, CodingKey {
         case mediaID = "media_id"

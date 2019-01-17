@@ -34,8 +34,19 @@ public enum StartLiveBroadcastEnum {
     case failure(error: Error?)
 }
 
+public enum TwoFactorLoginEnum {
+    case success(data: Data?, response: URLResponse?, error: Error?)
+    case failure()
+}
+
+public enum SendTwoFactorLoginSmsEnum {
+    case success()
+    case failure()
+}
+
 public typealias CreateLiveBroadcastClosure = (_ response: CreateLiveBroadcastEnum) -> (Void)
 public typealias StartLiveBroadcastClosure = (_ response: StartLiveBroadcastEnum) -> (Void)
+public typealias SendTwoFactorLoginSmsClosure = (_ response: SendTwoFactorLoginSmsEnum) -> (Void)
 
 public class APIHandler: APIHandlerProtocol {
     
@@ -68,6 +79,18 @@ public class APIHandler: APIHandlerProtocol {
         try UserHandler.shared.login { (result, cache) in
             completion(result, cache)
         }
+    }
+    
+    public func twoFactorLogin(verificationCode: String, useBackupCode: Bool, completion: @escaping (Result<LoginResultModel>, SessionCache?) -> ()) throws {
+        try UserHandler.shared.twoFactorLogin(verificationCode: verificationCode, useBackupCode: useBackupCode, completion: { (result, cache) in
+            completion(result, cache)
+        })
+    }
+    
+    public func sendTwoFactorLoginSms(completion: @escaping SendTwoFactorLoginSmsClosure) throws {
+        try UserHandler.shared.sendTwoFactorLoginSms(completion: { (result) -> (Void) in
+            completion(result)
+        })
     }
     
     public func createLive(completion: @escaping CreateLiveBroadcastClosure) {

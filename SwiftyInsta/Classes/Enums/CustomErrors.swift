@@ -8,11 +8,13 @@
 
 import Foundation
 
-enum CustomErrors: Error {
+public enum CustomErrors: Error {
     case urlCreationFaild(_ description: String)
     case runTimeError(_ description: String)
     case invalidCredentials
     case twoFactorAuthentication
+    case invalidTwoFactorCode
+    case missingTwoFactorCode
     case challengeRequired
     case unExpected(_ description: String)
     case groupedError(_ description: String)

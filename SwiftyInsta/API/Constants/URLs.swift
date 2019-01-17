@@ -26,6 +26,7 @@ struct URLs {
     private static let accountTwoFactorLogin = "/accounts/two_factor_login/"
     private static let accountChangePassword = "/accounts/change_password/"
     private static let accountLogout = "/accounts/logout/"
+    private static let accountSendTwoFactorLoginSms = "/accounts/send_two_factor_login_sms/"
     private static let searchUser = "/users/search"
     private static let userInfo = "/users/%ld/info/"
     private static let userFollowing = "/friendships/%ld/following/"
@@ -85,11 +86,27 @@ struct URLs {
     }
     
     static func getCreateLiveUrl() throws -> URL {
-        if let url = URL(string: instagramUrl + api + apiVersion + createLive) {
+        if let url = URL(string: baseInstagramApiUrl + createLive) {
             return url
         }
         
         throw CustomErrors.urlCreationFaild("Cant create URL for create live.")
+    }
+    
+    static func getTwoFactorLoginUrl() throws -> URL {
+        if let url = URL(string:baseInstagramApiUrl + accountTwoFactorLogin) {
+            return url
+        }
+        
+        throw CustomErrors.urlCreationFaild("Cant create URL for two factor login.")
+    }
+    
+    static func getSendTwoFactorLoginSmsUrl() throws -> URL {
+        if let url = URL(string: baseInstagramApiUrl + accountSendTwoFactorLoginSms) {
+            return url
+        }
+        
+        throw CustomErrors.urlCreationFaild("Cant create URL for send two factor login sms.")
     }
     
     static func getStartLiveUrl() -> String {

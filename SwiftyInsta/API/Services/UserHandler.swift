@@ -12,6 +12,8 @@ public protocol UserHandlerProtocol {
     func createAccount(account: CreateAccountModel, completion: @escaping (Bool) -> ()) throws
     func login(completion: @escaping (Result<LoginResultModel>, SessionCache?) -> ()) throws
     func login(cache: SessionCache, completion: @escaping (Result<LoginResultModel>) -> ()) throws
+    func twoFactorLogin(verificationCode: String, useBackupCode: Bool, completion: @escaping (Result<LoginResultModel>, SessionCache?) -> ()) throws
+    func sendTwoFactorLoginSms(completion: @escaping SendTwoFactorLoginSmsClosure) throws
     func challengeLogin(completion: @escaping (Result<ResponseTypes>) -> ()) throws
     func verifyMethod(of type: VerifyTypes, completion: @escaping (Result<VerifyResponse>) ->()) throws
     func sendVerifyCode(securityCode: String, completion: @escaping (Result<LoginResultModel>, SessionCache?) -> ()) throws
@@ -31,10 +33,24 @@ public protocol UserHandlerProtocol {
     func unBlock(userId: Int, completion: @escaping (Result<FollowResponseModel>) -> ()) throws
 }
 
+public enum TwoFactorVerificationMethodsEnum: String {
+    case none = "0"
+    case sms = "1"
+    case backup = "2"
+    case totp = "3"
+}
+
+public enum TwoFactorLoginErrorTypeEnum: String {
+    case invalidCode = "sms_code_validation_code_invalid"
+    case missingCode = "sms_code_validation_code_missing"
+}
+
 class UserHandler: UserHandlerProtocol {
     
     static let shared = UserHandler()
 
+    private var loginCookies: [HTTPCookie]!
+    
     private init() {
         
     }
@@ -106,6 +122,7 @@ class UserHandler: UserHandlerProtocol {
                                         
                                     } else if loginFailReason.twoFactorRequired ?? false {
                                         HandlerSettings.shared.twoFactor = loginFailReason.twoFactorInfo
+                                        self.loginCookies = cookies
                                         completion(Return.fail(error: CustomErrors.twoFactorAuthentication, response: .ok, value: .twoFactorRequired), nil)
                                         
                                     } else if loginFailReason.checkpointChallengeRequired ?? false || loginFailReason.errorType == "checkpoint_challenge_required" {
@@ -160,6 +177,115 @@ class UserHandler: UserHandlerProtocol {
                 } else {
                     completion(Return.fail(error: nil, response: .wrongRequest, value: .wrongRequest))
                 }
+            }
+        }
+    }
+    
+    private func getTwoFactorLoginRequestBody(verificationCode: String, verificationMethod: String) -> [String: Any] {
+        let content = [
+            "verification_code": verificationCode,
+            "_csrftoken": HandlerSettings.shared.user!.csrfToken,
+            "two_factor_identifier" : HandlerSettings.shared.twoFactor!.twoFactorIdentifier,
+            "username": HandlerSettings.shared.user!.username,
+            "guid": HandlerSettings.shared.device!.deviceGuid.uuidString,
+            "device_id": RequestMessageModel.generateDeviceIdFromGuid(guid: HandlerSettings.shared.device!.deviceGuid),
+            "verification_method": verificationMethod
+        ]
+        
+        let encoder = JSONEncoder()
+        let payload = String(data: try! encoder.encode(content), encoding: .utf8)!
+        let hash = payload.hmac(algorithm: .SHA256, key: Headers.HeaderIGSignatureValue)
+        
+        let signature = "\(hash).\(payload)"
+        let body: [String: Any] = [
+            Headers.HeaderIGSignatureKey: signature.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!,
+            Headers.HeaderIGSignatureVersionKey: Headers.HeaderIGSignatureVersionValue
+        ]
+        
+        return body
+    }
+    
+    func twoFactorLogin(verificationCode: String, useBackupCode: Bool, completion: @escaping (Result<LoginResultModel>, SessionCache?) -> ()) throws {
+        var verificationMethod = TwoFactorVerificationMethodsEnum.none.rawValue
+        
+        if useBackupCode {
+            verificationMethod = TwoFactorVerificationMethodsEnum.backup.rawValue
+        } else if HandlerSettings.shared.twoFactor?.totpTwoFactorOn == true {
+            verificationMethod = TwoFactorVerificationMethodsEnum.totp.rawValue
+        } else if HandlerSettings.shared.twoFactor?.smsTwoFactorOn == true {
+            verificationMethod = TwoFactorVerificationMethodsEnum.sms.rawValue
+        }
+        
+        let body = getTwoFactorLoginRequestBody(verificationCode: verificationCode, verificationMethod: verificationMethod)
+        
+        HandlerSettings.shared.httpHelper!.sendAsync(method: .post, url: try! URLs.getTwoFactorLoginUrl(), body: body, header: [:]) { (data, response, error) in
+            if let error = error {
+                completion(Return.fail(error: error, response: .unknown, value: nil), nil)
+            } else {
+                let decoder = JSONDecoder()
+                decoder.keyDecodingStrategy = .convertFromSnakeCase
+                
+                if let data = data {
+                    if response?.statusCode != 200 {
+                        do {
+                            let loginFailReason = try decoder.decode(LoginBaseResponseModel.self, from: data)
+                            if loginFailReason.errorType == TwoFactorLoginErrorTypeEnum.invalidCode.rawValue {
+                                completion(Return.fail(error: CustomErrors.invalidTwoFactorCode, response: .fail, value: nil), nil)
+                            } else if loginFailReason.errorType == TwoFactorLoginErrorTypeEnum.missingCode.rawValue {
+                                completion(Return.fail(error: CustomErrors.missingTwoFactorCode, response: .fail, value: nil), nil)
+                            }
+                        } catch {
+                            completion(Return.fail(error: error, response: .ok, value: nil), nil)
+                        }
+                    } else {
+                        do {
+                            let loginInfo = try decoder.decode(LoginResponseModel.self, from: data)
+                            HandlerSettings.shared.user!.loggedInUser = loginInfo.loggedInUser
+                            HandlerSettings.shared.isUserAuthenticated = (loginInfo.loggedInUser.username?.lowercased() == HandlerSettings.shared.user!.username.lowercased())
+                            HandlerSettings.shared.user!.rankToken = "\(HandlerSettings.shared.user!.loggedInUser.pk ?? 0)_\(HandlerSettings.shared.request!.phoneId )"
+                            
+                            let sessionCache = SessionCache.init(user: HandlerSettings.shared.user!, device: HandlerSettings.shared.device!, requestMessage: HandlerSettings.shared.request!, cookies: self.loginCookies, isUserAuthenticated: true)
+                            self.loginCookies = nil
+                            completion(Return.success(value: .success), sessionCache)
+                        } catch {
+                            completion(Return.fail(error: error, response: .ok, value: nil), nil)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private func getTwoFactorLoginSmsRequestBody() -> [String: Any]{
+        let content = [
+            "two_factor_identifier" : HandlerSettings.shared.twoFactor!.twoFactorIdentifier,
+            "username": HandlerSettings.shared.user!.username,
+            "device_id": RequestMessageModel.generateDeviceIdFromGuid(guid: HandlerSettings.shared.device!.deviceGuid),
+            "guid": HandlerSettings.shared.device!.deviceGuid.uuidString,
+            "_csrftoken": HandlerSettings.shared.user!.csrfToken,
+            ]
+        
+        let encoder = JSONEncoder()
+        let payload = String(data: try! encoder.encode(content), encoding: .utf8)!
+        let hash = payload.hmac(algorithm: .SHA256, key: Headers.HeaderIGSignatureValue)
+        
+        let signature = "\(hash).\(payload)"
+        let body: [String: Any] = [
+            Headers.HeaderIGSignatureKey: signature.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!,
+            Headers.HeaderIGSignatureVersionKey: Headers.HeaderIGSignatureVersionValue
+        ]
+
+        return body
+    }
+    
+    func sendTwoFactorLoginSms(completion: @escaping SendTwoFactorLoginSmsClosure) throws {
+        let body = getTwoFactorLoginSmsRequestBody()
+        
+        HandlerSettings.shared.httpHelper!.sendAsync(method: .post, url: try URLs.getSendTwoFactorLoginSmsUrl(), body: body, header: [:]) { (data, response, error) in
+            if response?.statusCode == 200 {
+                completion(.success())
+            } else {
+                completion(.failure())
             }
         }
     }

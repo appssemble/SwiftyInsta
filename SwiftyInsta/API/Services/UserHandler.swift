@@ -120,8 +120,11 @@ class UserHandler: UserHandlerProtocol {
                                         
                                     } else if loginFailReason.twoFactorRequired ?? false {
                                         HandlerSettings.shared.twoFactor = loginFailReason.twoFactorInfo
-                                        completion(Return.fail(error: CustomErrors.twoFactorAuthentication, response: .ok, value: .twoFactorRequired), nil)
-                                        
+                                        if loginFailReason.twoFactorInfo?.totpTwoFactorOn == true {
+                                            completion(Return.fail(error: CustomErrors.twoFactorAuthentication, response: .totp, value: .twoFactorRequired), nil)
+                                        } else {
+                                        completion(Return.fail(error: CustomErrors.twoFactorAuthentication, response: .sms, value: .twoFactorRequired), nil)
+                                        }
                                     } else if loginFailReason.checkpointChallengeRequired ?? false || loginFailReason.errorType == "checkpoint_challenge_required" {
                                         HandlerSettings.shared.challenge = loginFailReason.challenge
                                         completion(Return.fail(error: CustomErrors.challengeRequired, response: .ok, value: .challengeRequired), nil)

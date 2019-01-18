@@ -48,8 +48,6 @@ public enum TwoFactorLoginErrorTypeEnum: String {
 class UserHandler: UserHandlerProtocol {
     
     static let shared = UserHandler()
-
-    private var loginCookies: [HTTPCookie]!
     
     private init() {
         
@@ -122,7 +120,6 @@ class UserHandler: UserHandlerProtocol {
                                         
                                     } else if loginFailReason.twoFactorRequired ?? false {
                                         HandlerSettings.shared.twoFactor = loginFailReason.twoFactorInfo
-                                        self.loginCookies = cookies
                                         completion(Return.fail(error: CustomErrors.twoFactorAuthentication, response: .ok, value: .twoFactorRequired), nil)
                                         
                                     } else if loginFailReason.checkpointChallengeRequired ?? false || loginFailReason.errorType == "checkpoint_challenge_required" {
@@ -142,7 +139,7 @@ class UserHandler: UserHandlerProtocol {
                                     HandlerSettings.shared.isUserAuthenticated = (loginInfo.loggedInUser.username?.lowercased() == HandlerSettings.shared.user!.username.lowercased())
                                     HandlerSettings.shared.user!.rankToken = "\(HandlerSettings.shared.user!.loggedInUser.pk ?? 0)_\(HandlerSettings.shared.request!.phoneId )"
                                     
-                                    let sessionCache = SessionCache.init(user: HandlerSettings.shared.user!, device: HandlerSettings.shared.device!, requestMessage: HandlerSettings.shared.request!, cookies: cookies, isUserAuthenticated: true)
+                                    let sessionCache = SessionCache.init(user: HandlerSettings.shared.user!, device: HandlerSettings.shared.device!, requestMessage: HandlerSettings.shared.request!, cookies: (HTTPCookieStorage.shared.cookies?.getInstagramCookies()?.toCookieData())!, isUserAuthenticated: true)
                                     completion(Return.success(value: .success), sessionCache)
                                 } catch {
                                     completion(Return.fail(error: error, response: .ok, value: nil), nil)
@@ -244,8 +241,7 @@ class UserHandler: UserHandlerProtocol {
                             HandlerSettings.shared.isUserAuthenticated = (loginInfo.loggedInUser.username?.lowercased() == HandlerSettings.shared.user!.username.lowercased())
                             HandlerSettings.shared.user!.rankToken = "\(HandlerSettings.shared.user!.loggedInUser.pk ?? 0)_\(HandlerSettings.shared.request!.phoneId )"
                             
-                            let sessionCache = SessionCache.init(user: HandlerSettings.shared.user!, device: HandlerSettings.shared.device!, requestMessage: HandlerSettings.shared.request!, cookies: self.loginCookies, isUserAuthenticated: true)
-                            self.loginCookies = nil
+                            let sessionCache = SessionCache.init(user: HandlerSettings.shared.user!, device: HandlerSettings.shared.device!, requestMessage: HandlerSettings.shared.request!, cookies: (HTTPCookieStorage.shared.cookies?.getInstagramCookies()?.toCookieData())!, isUserAuthenticated: true)
                             completion(Return.success(value: .success), sessionCache)
                         } catch {
                             completion(Return.fail(error: error, response: .ok, value: nil), nil)
@@ -337,9 +333,7 @@ class UserHandler: UserHandlerProtocol {
                             HandlerSettings.shared.user!.loggedInUser = loginInfo.loggedInUser
                             HandlerSettings.shared.isUserAuthenticated = (loginInfo.loggedInUser.username?.lowercased() == HandlerSettings.shared.user!.username.lowercased())
                             HandlerSettings.shared.user!.rankToken = "\(HandlerSettings.shared.user!.loggedInUser.pk ?? 0)_\(HandlerSettings.shared.request!.phoneId )"
-                            let fields = response?.allHeaderFields
-                            let cookies = HTTPCookie.cookies(withResponseHeaderFields: fields as! [String : String], for: (response?.url)!)
-                            let sessionCache = SessionCache.init(user: HandlerSettings.shared.user!, device: HandlerSettings.shared.device!, requestMessage: HandlerSettings.shared.request!, cookies: cookies, isUserAuthenticated: true)
+                            let sessionCache = SessionCache.init(user: HandlerSettings.shared.user!, device: HandlerSettings.shared.device!, requestMessage: HandlerSettings.shared.request!, cookies: (HTTPCookieStorage.shared.cookies?.getInstagramCookies()?.toCookieData())!, isUserAuthenticated: true)
                             completion(Return.success(value: .success), sessionCache)
                         } else {
                             let error = CustomErrors.runTimeError("Please check the code we sent you and try again.")

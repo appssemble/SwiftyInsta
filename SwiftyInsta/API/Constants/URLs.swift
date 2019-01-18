@@ -76,6 +76,8 @@ struct URLs {
     private static let createLive = "/live/create/"
     private static let startLive = "/live/%@/start/"
     
+    private static let instagramCookieUrl = "https://www.instagram.com/"
+    
     // MARK: - Methods
     
     static func getInstagramUrl() throws -> URL {
@@ -555,6 +557,14 @@ struct URLs {
         if let url = URL(string: String(format: "%@%@", baseInstagramApiUrl, String(format: editMedia, mediaId))) {
             return url
         }
+        throw CustomErrors.urlCreationFaild("Cant create URL for verify login.")
+    }
+    
+    static func getInstagramCookieUrl() throws -> URL {
+        if let url = URL(string: instagramCookieUrl) {
+            return url
+        }
+        
         throw CustomErrors.urlCreationFaild("Cant create URL for verify login.")
     }
 }

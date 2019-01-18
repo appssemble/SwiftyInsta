@@ -91,7 +91,14 @@ class HttpHelper {
         }
     }
     
-    func setCookies(_ cookies: [HTTPCookie]) {
-        HTTPCookieStorage.shared.setCookies(cookies, for: URL(string: "https://www.instagram.com/"), mainDocumentURL: nil)
+    func setCookies(_ cookiesData: [Data]) {
+        var cookies = [HTTPCookie]()
+        for data in cookiesData {
+            if let cookieFromData = HTTPCookie.loadCookie(using: data) {
+                cookies.append(cookieFromData)
+            }
+        }
+        
+        try? HTTPCookieStorage.shared.setCookies(cookies, for: URLs.getInstagramCookieUrl(), mainDocumentURL: nil)
     }
 }

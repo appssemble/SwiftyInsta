@@ -21,6 +21,6 @@ public enum ResponseTypes {
     case actionBlocked
     case temporarilyBlocked
     case fail
-    case sms
+    case sms(obfuscatedPhoneNumber: String)
     case totp
 }

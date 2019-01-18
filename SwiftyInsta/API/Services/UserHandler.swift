@@ -117,13 +117,12 @@ class UserHandler: UserHandlerProtocol {
                                     if loginFailReason.invalidCredentials ?? false || loginFailReason.errorType == "bad_password" {
                                         let value = (loginFailReason.errorType == "bad_password" ? LoginResultModel.badPassword : LoginResultModel.invalidUser)
                                         completion(Return.fail(error: CustomErrors.invalidCredentials, response: .fail, value: value), nil)
-                                        
                                     } else if loginFailReason.twoFactorRequired ?? false {
                                         HandlerSettings.shared.twoFactor = loginFailReason.twoFactorInfo
                                         if loginFailReason.twoFactorInfo?.totpTwoFactorOn == true {
                                             completion(Return.fail(error: CustomErrors.twoFactorAuthentication, response: .totp, value: .twoFactorRequired), nil)
                                         } else {
-                                        completion(Return.fail(error: CustomErrors.twoFactorAuthentication, response: .sms, value: .twoFactorRequired), nil)
+                                        completion(Return.fail(error: CustomErrors.twoFactorAuthentication, response: .sms(obfuscatedPhoneNumber: loginFailReason.twoFactorInfo!.obfuscatedPhoneNumber), value: .twoFactorRequired), nil)
                                         }
                                     } else if loginFailReason.checkpointChallengeRequired ?? false || loginFailReason.errorType == "checkpoint_challenge_required" {
                                         HandlerSettings.shared.challenge = loginFailReason.challenge

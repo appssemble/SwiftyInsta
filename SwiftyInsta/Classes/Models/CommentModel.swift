@@ -19,8 +19,9 @@ public struct CommentModel: Codable {
     public var shareEnabled: Bool?
     public var hasLikedComment: Bool?
     public var commentLikeCount: Int?
+    public var createdAt: Int?
     
-    public init(pk: Int?, userId: Int?, text: String?, contentType: String?, status: String?, user: UserShortModel?, didReportAsSpam: Bool?, shareEnabled: Bool?, hasLikedComment: Bool?, commentLikeCount: Int?) {
+    public init(pk: Int?, userId: Int?, text: String?, contentType: String?, status: String?, user: UserShortModel?, didReportAsSpam: Bool?, shareEnabled: Bool?, hasLikedComment: Bool?, commentLikeCount: Int?, createdAt: Int?) {
         self.pk = pk
         self.userId = userId
         self.contentType = contentType
@@ -30,6 +31,7 @@ public struct CommentModel: Codable {
         self.shareEnabled = shareEnabled
         self.hasLikedComment = hasLikedComment
         self.commentLikeCount = commentLikeCount
+        self.createdAt = createdAt
     }
 }
 

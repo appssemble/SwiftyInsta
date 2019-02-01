@@ -20,4 +20,7 @@ public struct PaginationParameters {
     static func maxPagesToLoad(maxPages: Int) -> PaginationParameters {
         return PaginationParameters(maxPages: maxPages)
     }
+    
+    public init() {
+    }
 }

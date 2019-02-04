@@ -75,6 +75,8 @@ struct URLs {
     private static let editMedia = "/media/%@/edit_media/"
     private static let createLive = "/live/create/"
     private static let startLive = "/live/%@/start/"
+    private static let heartbeatAndViewerCount = "/live/%@/heartbeat_and_get_viewer_count/"
+    private static let broadcastComments = "/live/%@/get_comment/"
     
     private static let instagramCookieUrl = "https://www.instagram.com/"
     
@@ -113,6 +115,14 @@ struct URLs {
     
     static func getStartLiveUrl() -> String {
         return instagramUrl + api + apiVersion + startLive
+    }
+    
+    static func getHeartbeatAndViewerCountUrl() -> String {
+        return instagramUrl + api + apiVersion + heartbeatAndViewerCount
+    }
+    
+    static func getBroadcastCommentsUrl() -> String {
+        return instagramUrl + api + apiVersion + broadcastComments
     }
     
     static func getCreateAccountUrl() throws -> URL {

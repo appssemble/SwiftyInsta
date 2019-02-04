@@ -11,6 +11,8 @@ import Foundation
 public protocol LiveStreamProtocol {
     func createLive(completion: @escaping CreateLiveBroadcastClosure)
     func startLive(broadcastID: Int64, completion: @escaping StartLiveBroadcastClosure)
+    func getBroadcastComments(broadcastID: Int64, lastCommentTimestamp: Int?, completion: @escaping GetBroadcastCommentsClosure)
+    func getHeartbeatAndViewerCount(broadcastID: Int64, completion: @escaping GetHeartbeatAndViewerCountClosure)
 }
 
 public protocol APIHandlerProtocol:
@@ -34,6 +36,11 @@ public enum StartLiveBroadcastEnum {
     case failure(error: Error?)
 }
 
+public enum GetHeartbeatAndViewerCountEnum {
+    case success(heartbeatAndViewerResponse: HeartbeatAndViewerResponse)
+    case failure(error: Error?)
+}
+
 public enum TwoFactorLoginEnum {
     case success(data: Data?, response: URLResponse?, error: Error?)
     case failure()
@@ -44,9 +51,16 @@ public enum SendTwoFactorLoginSmsEnum {
     case failure()
 }
 
+public enum GetBroadcastCommentsEnum {
+    case succes(broadcastInfo: MediaCommentsResponseModel)
+    case failure(error: Error?)
+}
+
 public typealias CreateLiveBroadcastClosure = (_ response: CreateLiveBroadcastEnum) -> (Void)
 public typealias StartLiveBroadcastClosure = (_ response: StartLiveBroadcastEnum) -> (Void)
+public typealias GetHeartbeatAndViewerCountClosure = (_ response: GetHeartbeatAndViewerCountEnum) -> (Void)
 public typealias SendTwoFactorLoginSmsClosure = (_ response: SendTwoFactorLoginSmsEnum) -> (Void)
+public typealias GetBroadcastCommentsClosure = (_ response: GetBroadcastCommentsEnum) -> (Void)
 
 public class APIHandler: APIHandlerProtocol {
     
@@ -123,6 +137,54 @@ public class APIHandler: APIHandlerProtocol {
                         completion(.success(liveBroadcastResponse: liveBroadcastResponse))
                     } catch {
                         completion(.failure(error: error))
+                    }
+                }
+            }
+        }
+    }
+    
+    public func getHeartbeatAndViewerCount(broadcastID: Int64, completion: @escaping GetHeartbeatAndViewerCountClosure) {
+        let baseUrl = URLs.getHeartbeatAndViewerCountUrl()
+        let formattedUrl = URL(string: String(format: baseUrl, String(broadcastID)))
+        if let url = formattedUrl {
+            HandlerSettings.shared.httpHelper!.sendAsync(method: .post, url: url, body: [:], header: [:]) { (data, response, error) in
+                if let error = error {
+                    completion(.failure(error: error))
+                } else {
+                    do {
+                        let jsonDecoder = JSONDecoder()
+                        let heartbeatAndCountResponse = try jsonDecoder.decode(HeartbeatAndViewerResponse.self, from: data!)
+                        completion(.success(heartbeatAndViewerResponse: heartbeatAndCountResponse))
+                    } catch {
+                        completion(.failure(error: error))
+                    }
+                }
+            }
+        }
+    }
+    
+    public func getBroadcastComments(broadcastID: Int64, lastCommentTimestamp: Int?, completion: @escaping GetBroadcastCommentsClosure) {
+        var baseUrl = URLs.getBroadcastCommentsUrl()
+        if let timestamp = lastCommentTimestamp {
+            baseUrl += "?last_comment_ts=\(timestamp)"
+        }
+        
+        let formattedUrl = URL(string: String(format: baseUrl, String(broadcastID)))
+        
+        if let url = formattedUrl {
+            HandlerSettings.shared.httpHelper!.sendAsync(method: .get, url: url, body: [:], header: [:]) { (data, response, error) in
+                if error != nil {
+                    completion(.failure(error: error))
+                } else {
+                    if let data = data {
+                        let decoder = JSONDecoder()
+                        decoder.keyDecodingStrategy = .convertFromSnakeCase
+                        do {
+                            let broadcastInfo = try decoder.decode(MediaCommentsResponseModel.self, from: data)
+                            completion(.succes(broadcastInfo: broadcastInfo))
+                        } catch {
+                            completion(.failure(error: error))
+                        }
                     }
                 }
             }

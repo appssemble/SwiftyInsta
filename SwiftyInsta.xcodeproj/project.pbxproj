@@ -81,6 +81,7 @@
 		11DDE51F21A1F94B00754F0F /* AndroidVersion.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11DDE51E21A1F94B00754F0F /* AndroidVersion.swift */; };
 		11E2B135218F13D20095374A /* UserShortListModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11E2B134218F13D20095374A /* UserShortListModel.swift */; };
 		11F0CE6B2195CC2400C0F6A4 /* TimeLineModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11F0CE6A2195CC2400C0F6A4 /* TimeLineModel.swift */; };
+		C60B06B9220484390097B0F0 /* HeartbeatAndViewerResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = C60B06B8220484390097B0F0 /* HeartbeatAndViewerResponse.swift */; };
 		C60B155B21ECCFE000476FE2 /* CreateLiveBroadcastResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = C60B155A21ECCFE000476FE2 /* CreateLiveBroadcastResponse.swift */; };
 		C692808821EDC2BF00DF8153 /* StartLiveBroadcastResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = C692808721EDC2BF00DF8153 /* StartLiveBroadcastResponse.swift */; };
 /* End PBXBuildFile section */
@@ -173,6 +174,7 @@
 		11DDE51E21A1F94B00754F0F /* AndroidVersion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AndroidVersion.swift; sourceTree = "<group>"; };
 		11E2B134218F13D20095374A /* UserShortListModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserShortListModel.swift; sourceTree = "<group>"; };
 		11F0CE6A2195CC2400C0F6A4 /* TimeLineModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimeLineModel.swift; sourceTree = "<group>"; };
+		C60B06B8220484390097B0F0 /* HeartbeatAndViewerResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HeartbeatAndViewerResponse.swift; sourceTree = "<group>"; };
 		C60B155A21ECCFE000476FE2 /* CreateLiveBroadcastResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreateLiveBroadcastResponse.swift; sourceTree = "<group>"; };
 		C692808721EDC2BF00DF8153 /* StartLiveBroadcastResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StartLiveBroadcastResponse.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -339,6 +341,7 @@
 				116B149E21DEB64B00953A71 /* SessionCache.swift */,
 				C60B155A21ECCFE000476FE2 /* CreateLiveBroadcastResponse.swift */,
 				C692808721EDC2BF00DF8153 /* StartLiveBroadcastResponse.swift */,
+				C60B06B8220484390097B0F0 /* HeartbeatAndViewerResponse.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -550,6 +553,7 @@
 				115F1251217FEF6800ED3530 /* ResultInfo.swift in Sources */,
 				11723A592187C23400968DA5 /* LoginResponseModel.swift in Sources */,
 				1131A45421974F9D00497992 /* TagFeedModel.swift in Sources */,
+				C60B06B9220484390097B0F0 /* HeartbeatAndViewerResponse.swift in Sources */,
 				11B9568621945F09006661A6 /* VideoVersionModel.swift in Sources */,
 				112E735C2180E86B0048A8D7 /* CryptoHelper.swift in Sources */,
 				11C439D4219A429B00467381 /* ProfilePrivacyResponseModel.swift in Sources */,

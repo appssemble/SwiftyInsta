@@ -11,12 +11,10 @@ import Foundation
 class HttpHelper {
     
     typealias completionHandler = (Data?, HTTPURLResponse?, Error?) -> Void
-    private var configuration: URLSessionConfiguration
     private var session: URLSession
     
-    init(config: URLSessionConfiguration) {
-        configuration = config
-        session = URLSession(configuration: config)
+    init(urlSession: URLSession) {
+        session = urlSession
     }
     
     /// Only ```data: Data?``` or ```body: [String: Any]``` can use as ```httpBody```
@@ -63,8 +61,16 @@ class HttpHelper {
         request.addValue(Headers.HeaderAcceptLanguageValue, forHTTPHeaderField: Headers.HeaderAcceptLanguageKey)
         request.addValue(Headers.HeaderIGCapablitiesValue, forHTTPHeaderField: Headers.HeaderIGCapablitiesKey)
         request.addValue(Headers.HeaderIGConnectionTypeValue, forHTTPHeaderField: Headers.HeaderIGConnectionTypeKey)
-        request.addValue(Headers.HeaderUserAgentValue, forHTTPHeaderField: Headers.HeaderUserAgentKey)
         request.addValue(Headers.HeaderContentTypeApplicationFormValue, forHTTPHeaderField: Headers.HeaderContentTypeKey)
+        request.addValue(Headers.HeaderUserAgentValue, forHTTPHeaderField: Headers.HeaderUserAgentKey)
+        
+        // remove old values and updates with new one.
+        if HttpSettings.shared.getHeaders().count > 0 {
+            let headers = HttpSettings.shared.getHeaders()
+            headers.forEach { (key, value) in
+                request.setValue(value, forHTTPHeaderField: key)
+            }
+        }
         
         return request
     }

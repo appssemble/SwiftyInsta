@@ -28,6 +28,24 @@ class SwiftyInstaTests: XCTestCase {
     // ----------------------------
     // MARK: - User Handler Methods
     
+    func testRecoverAccount() {
+        let exp = expectation(description: "testRecoverAccount() faild during timeout")
+        let urlSession = URLSession(configuration: .default)
+        let user = SessionStorage.create(username: "", password: "")
+        let handler = try! APIBuilder().createBuilder().setHttpHandler(urlSession:
+            urlSession).setRequestDelay(delay: .default).setUser(user: user).build()
+        do {
+            try handler.recoverAccountBy(email: "swiftyinsta", completion: { (result) in
+                print(result)
+                exp.fulfill()
+            })
+        } catch {
+            print(error)
+            exp.fulfill()
+        }
+        waitForExpectations(timeout: 60, handler: nil)
+    }
+    
     func testLogin() {
         
         // Clearing saved cookies before login.
@@ -36,8 +54,11 @@ class SwiftyInstaTests: XCTestCase {
         })
         
         let exp = expectation(description: "login() faild during timeout")
-        let user = SessionStorage.create(username: "swiftyinsta", password: "vvvvvv")
-        let handler = try! APIBuilder().createBuilder().setHttpHandler(config: .default).setRequestDelay(delay: .default).setUser(user: user).build()
+        let user = SessionStorage.create(username: "swiftyinsta", password: "***")
+        let userAgent = CustomUserAgent(apiVersion: "79.0.0.0", osName: "iOS", osVersion: "12", osRelease: "1.4", dpi: "458", resolution: "2688x1242", company: "Apple", model: "iPhone11,2", modem: "intel", locale: "en_US", fbCode: "95414346")
+        HttpSettings.shared.addValue(userAgent.toString(), forHTTPHeaderField: Headers.HeaderUserAgentKey)
+        let urlSession = URLSession(configuration: .default)
+        let handler = try! APIBuilder().createBuilder().setHttpHandler(urlSession: urlSession).setRequestDelay(delay: .default).setUser(user: user).build()
         var _error: Error?
         do {
             try handler.login { (result, cache) in
@@ -64,18 +85,40 @@ class SwiftyInstaTests: XCTestCase {
                 switch _error! {
                 case CustomErrors.challengeRequired:
                     self.testLoginWithChallenge(handler: handler)
+                case CustomErrors.twoFactorAuthentication:
+                    self.testLoginTwoFactor(handler: handler)
                 default:
                     print("[-] unexcpected error.")
                 }
-            }else {
+            } else {
                 // FIXME: after the test is completed, the logout is handled by this variable.
                 self.logoutAfterTest = true
                 
                 // FIXME: 'test function' you want to run after login.
-                self.testEditMedia(handler: handler)
-                //self.testUploadProfilePicture(handler: handler)
+                self.testRemoveFollower(handler: handler)
             }
         }
+    }
+    
+    func testLoginTwoFactor(handler: APIHandlerProtocol) {
+        print("[+] testing twoFactor login...")
+
+        let verCode = "269475"
+        
+        let exp = expectation(description: "testLoginTwoFactor() faild during timeout")
+
+        do {
+            try handler.twoFactorLogin(verificationCode: verCode, useBackupCode: false, completion: { (result, cache) in
+                print(result)
+                exp.fulfill()
+            })
+        } catch {
+            print(error.localizedDescription)
+            exp.fulfill()
+            
+        }
+        
+        waitForExpectations(timeout: 60, handler: nil)
     }
     
     func testLoginCache(handler: APIHandlerProtocol, cache: SessionCache) {
@@ -116,7 +159,8 @@ class SwiftyInstaTests: XCTestCase {
                 print(result.value!)
                 try! handler.verifyMethod(of: .email, completion: { (result) in
                     print(result.value!)
-                    let securityCode = "093182"
+                    // FIXME: - Challenge Code
+                    let securityCode = "465739"
                     // Breakpoint Here, to variable from debugger type: e securityCode = "new code"
                     try! handler.sendVerifyCode(securityCode: securityCode, completion: { (result, cache) in
                         //_cache = cache
@@ -137,10 +181,28 @@ class SwiftyInstaTests: XCTestCase {
             
             // if you need to test loginCache method, uncomment lines [110, 121, 138] and set `logoutAfterTest = false'
             //self.testLoginCache(handler: handler, cache: _cache!)
-            if self.logoutAfterTest {
-                self.testLogout(handler: handler)
-            }
+            self.testGetMediaLikers(handler: handler)
+//            if self.logoutAfterTest {
+//                self.testLogout(handler: handler)
+//            }
         }
+    }
+    
+    func testSearch(username: String, handler: APIHandlerProtocol) {
+        let exp = expectation(description: "testSearch() faild during timeout")
+        do {
+            try handler.searchUser(username: username, completion: { (result) in
+                if result.isSucceeded {
+                    result.value?.compactMap { print("username: ", $0.username )}
+                }
+                
+                exp.fulfill()
+            })
+        } catch {
+            print("Error: ", error)
+            exp.fulfill()
+        }
+        waitForExpectations(timeout: 60, handler: nil)
     }
     
     func testLogout(handler: APIHandlerProtocol) {
@@ -164,10 +226,13 @@ class SwiftyInstaTests: XCTestCase {
     func testGetUser(handler: APIHandlerProtocol) {
         let exp = expectation(description: "getUser() faild during timeout")
         do {
-            try handler.getUser(username: "swifty.tips", completion: { (result) in // swifty.tips pk: 9529571412
+            try handler.getUser(id: 8766457680, completion: { (result) in // swifty.tips pk: 9529571412
                 if result.isSucceeded {
                     guard let user = result.value else { return }
-                    print("fullname: \(user.fullName!)")
+                    print("followers: ", user.user!.followerCount!)
+                    print("followings: ", user.user!.followingCount!)
+                    print("medias: ", user.user!.mediaCount!)
+                    //print("fullname: \(user.fullName!)")
                 } else {
                     print("GetUser failed: \(result.info.message)")
                 }
@@ -223,10 +288,13 @@ class SwiftyInstaTests: XCTestCase {
     func testGetUserFollowers(handler: APIHandlerProtocol) {
         let exp = expectation(description: "getUserFollowing() faild during timeout")
         do {
-            try handler.getUserFollowers(username: "", paginationParameter: PaginationParameters.maxPagesToLoad(maxPages: 15), searchQuery: "", completion: { (result) in
+            try handler.getUserFollowers(username: "swiftyinsta", paginationParameter: PaginationParameters.maxPagesToLoad(maxPages: 15), searchQuery: "", completion: { (result) in
                 if result.isSucceeded {
                     guard let followers = result.value else { return }
                     print("[+] followers count: \(followers.count)")
+                    followers.forEach({ (follower) in
+                        print(String(format: "name: %@\nuser_id: %ld", follower.fullName!, follower.pk!))
+                    })
                 } else {
                     print("[-] \(result.info.message)")
                 }
@@ -234,6 +302,33 @@ class SwiftyInstaTests: XCTestCase {
             })
         } catch {
             print(error.localizedDescription)
+            exp.fulfill()
+        }
+        
+        waitForExpectations(timeout: 60) { (err) in
+            if let err = err {
+                fatalError(err.localizedDescription)
+            }
+            
+            if self.logoutAfterTest {
+                self.testLogout(handler: handler)
+            }
+        }
+    }
+    
+    func testRemoveFollower(handler: APIHandlerProtocol) {
+        let exp = expectation(description: "removeFollower() faild during timeout")
+        do {
+            try handler.removeFollower(userId: 2291962059, completion: { (result) in
+                if result.isSucceeded {
+                    print("[+] user unfollowed")
+                }
+                
+                print(result)
+                exp.fulfill()
+            })
+        } catch {
+            print("[-] \(error.localizedDescription)")
             exp.fulfill()
         }
         
@@ -524,7 +619,7 @@ class SwiftyInstaTests: XCTestCase {
     func testGetUserMedia(handler: APIHandlerProtocol) {
         let exp = expectation(description: "getUserMedia() faild during timeout")
         do {
-            try handler.getUserMedia(for: "swiftyinsta", paginationParameter: PaginationParameters.maxPagesToLoad(maxPages: 5)) { (result) in
+            try handler.getUserMedia(for: "apple", paginationParameter: PaginationParameters.maxPagesToLoad(maxPages: 1)) { (result) in
                 if result.isSucceeded {
                     print(result.value!)
                     print("[+] number of pages that include medias: \(result.value!.count)")
@@ -652,6 +747,53 @@ class SwiftyInstaTests: XCTestCase {
         }
     }
     
+    func testGetMediaLikers(handler: APIHandlerProtocol) {
+        let mediaId = "1920671942680208682_8766457680"
+        let exp = expectation(description: "getMediaLikers() faild during timeout")
+        
+        do {
+            try handler.getMediaLikers(mediaId: mediaId, completion: { (result) in
+                print(result)
+                exp.fulfill()
+            })
+        } catch {
+            print("[-] \(error.localizedDescription)")
+            exp.fulfill()
+        }
+        
+        waitForExpectations(timeout: 60) { (err) in
+            if let err = err {
+                fatalError(err.localizedDescription)
+            }
+            
+            if self.logoutAfterTest {
+                self.testLogout(handler: handler)
+            }
+        }
+    }
+    
+    func testUploadVideo(handler: APIHandlerProtocol) {
+        print("[+] uploadVideo testing ...")
+        let exp = expectation(description: "testUploadVideo() faild during timeout")
+        let myBundle = Bundle.init(identifier: "com.TheM4hd1.SwiftyInsta")
+        let videoUrl = URL(fileURLWithPath: (myBundle?.path(forResource: "testbundle", ofType: "bundle"))! + "/video.mp4")
+        let imagePath = (myBundle?.path(forResource: "testbundle", ofType: "bundle"))! + "/2.jpg"
+        let image = UIImage(contentsOfFile: imagePath)
+        let photo = InstaPhoto(image: image!, caption: "", width: 1, height: 1)
+        let video = try! InstaVideo.init(data: Data.init(contentsOf: videoUrl), name: "video.mp4", caption: "just uploaded a video from framework", muted: false, width: 0, height: 0, type: 0)
+        do {
+            try handler.uploadVideo(video: video, imageThumbnail: photo, caption: "just uploaded a video from framework", completion: { (result) in
+                print(result)
+                exp.fulfill()
+            })
+        } catch {
+            print("[-] failed: ", error)
+            exp.fulfill()
+        }
+        
+        waitForExpectations(timeout: 60, handler: nil)
+    }
+    
     func testUploadPhoto(handler: APIHandlerProtocol) {
         let exp = expectation(description: "uploadPhoto() faild during timeout")
         let myBundle = Bundle.init(identifier: "com.TheM4hd1.SwiftyInsta")
@@ -716,8 +858,8 @@ class SwiftyInstaTests: XCTestCase {
     func testEditMedia(handler: APIHandlerProtocol) {
         let mediaId = "1920671942680208682_8766457680"
         let exp = expectation(description: "testEditMedia() faild during timeout")
-        
-        try! handler.editMedia(mediaId: mediaId, caption: "final test for edit media", completion: { (result) in
+        let tag = UserTags(in: [NewTag.init(user_id: 9529571412, position: [0.8, 0.8])], removed: [])
+        try! handler.editMedia(mediaId: mediaId, caption: "final test for tag editing.", tags: tag, completion: { (result) in
             exp.fulfill()
         })
         
@@ -1116,7 +1258,7 @@ class SwiftyInstaTests: XCTestCase {
     func testGetUserStory(handler: APIHandlerProtocol) {
         let exp = expectation(description: "getUserStory() faild during timeout")
         do {
-            try handler.getUser(username: "username", completion: { (user) in
+            try handler.getUser(username: "swiftyinsta", completion: { (user) in
                 
                 // Test Get Story Reel
 //                try? handler.getUserStoryReelFeed(userId: user.value!.pk!, completion: { (result) in
@@ -1124,6 +1266,19 @@ class SwiftyInstaTests: XCTestCase {
 //                })
                 
                 try? handler.getUserStory(userId: user.value!.pk!, completion: { (result) in
+                    let items = result.value!.items!
+                    items.forEach({ (item) in
+                        let mediatype = String(item.mediaType!)
+                        if mediatype == MediaTypes.image.rawValue {
+                            print(item.imageVersions2!.candidates!)
+                            // handle resolution here or just take first one.
+                            //let url = item.imageVersions2!.candidates!.first!.url!
+                        } else if mediatype == MediaTypes.video.rawValue {
+                            print(item.videoVersions!)
+                            // handle resolution or just take first one
+                            //let url = item.videoVersions!.first!.url!
+                        }
+                    })
                     exp.fulfill()
                 })
                 
@@ -1140,6 +1295,26 @@ class SwiftyInstaTests: XCTestCase {
             print("[-] \(error.localizedDescription)")
             exp.fulfill()
         }
+        
+        waitForExpectations(timeout: 60) { (err) in
+            if let err = err {
+                fatalError(err.localizedDescription)
+            }
+            
+            if self.logoutAfterTest {
+                self.testLogout(handler: handler)
+            }
+        }
+    }
+    
+    func testGetStoryViewers(handler: APIHandlerProtocol) {
+        let exp = expectation(description: "testGetStoryViewers() faild during timeout")
+        let storyPk = "2022853344112336157"
+        
+        try! handler.getStoryViewers(storyPk: storyPk, completion: { (result) in
+            result.value!.users!.forEach{ print($0.username!) }
+            exp.fulfill()
+        })
         
         waitForExpectations(timeout: 60) { (err) in
             if let err = err {

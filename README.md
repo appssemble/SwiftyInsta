@@ -14,7 +14,22 @@ This project is still in development phase and intends to provide all features w
 
 ## Installation
 
-1. To use this library in your project manually you may:
+### CocoaPods
+[CocoaPods](https://cocoapods.org) is a dependency manager for Cocoa projects. You can install it with the following command:
+```terminal
+$ gem install cocoapods
+```
+To integrate SwiftyInsta into your Xcode project using CocoaPods, specify it to a target in your Podfile:
+```text
+pod 'SwiftyInsta'
+```
+Then, run the following command:
+```terminal
+$ pod install
+````
+
+### Manual
+To use this library in your project manually you may:
     - Add compiled framework from ```General > Linked frameworks and libraries```
     - Clone the project, right click on your root project(not SwiftyInsta) and select ```Add files...```, then select the ```SwiftyInsta.xcodeproj```. after that go to your ```project>embeded libraries``` and select ```SwiftyInsta.framework```, build the project and import ```SwiftyInsta```
 
@@ -24,21 +39,24 @@ This project is still in development phase and intends to provide all features w
 ```swift
 import SwiftyInsta
 
+let _urlSession = URLSession(configuration: .default)
 let handler = try! APIBuilder()
 .createBuilder()
-.setHttpHandler(config: .default)
+.setHttpHandler(urlSession: _urlSession)
 .setRequestDelay(delay: .default)
 .setUser(user: user)
 .build()
 ```
 
 ### Login
+
 ```swift
 try? handler.login { (result) in
     //result: Result<LoginResultModel>
 }
 ```
 
+aslo to prevent known login issues, you can use [Siwa](https://github.com/TheM4hd1/Siwa), a helper framework for SwiftyInsta
 #### Search User
 ```swift
 try? handler.getUser(username: "username", completion: { (result) in

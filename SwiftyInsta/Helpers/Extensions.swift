@@ -61,7 +61,7 @@ extension HTTPCookie {
     
     static func loadCookie(using data: Data?) -> HTTPCookie? {
         guard let data = data, let properties = loadCookieProperties(from: data) else {
-                return nil
+            return nil
         }
         
         return HTTPCookie(properties: properties)
@@ -76,3 +76,6 @@ extension HTTPCookie {
     }
 }
 
+extension CharacterSet {
+    static let rfc3986Unreserved = CharacterSet(charactersIn: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~")
+}

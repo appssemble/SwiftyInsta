@@ -15,6 +15,7 @@ struct URLs {
     
     // MARK: - Base Url
     private static let instagramUrl = "https://i.instagram.com"
+    private static let instagramCookieUrl = "https://www.instagram.com/"
     private static let api = "/api"
     private static let apiVersion = "/v1"
     private static let apiSuffix = api + apiVersion
@@ -49,10 +50,17 @@ struct URLs {
     private static let changePassword = "/accounts/change_password/"
     private static let likeMedia = "/media/%@/like/"
     private static let unlikeMedia = "/media/%@/unlike/"
+    private static let mediaLikers = "/media/%@/likers/"
     private static let mediaComments = "/media/%@/comments/"
+    private static let removeFollower = "/friendships/remove_follower/%ld/"
+    private static let rejectFriendship = "/friendships/ignore/%ld/"
+    private static let approveFriendship = "/friendships/approve/%ld/"
+    private static let pendingFriendships = "/friendships/pending/"
     private static let followUser = "/friendships/create/%ld/"
     private static let unFollowUser = "/friendships/destroy/%ld/"
     private static let friendshipStatus = "/friendships/show/%ld"
+    private static let friendshipStatuses = "/friendships/show_many/"
+    private static let blockedList = "/users/blocked_list/"
     private static let blockUser = "/friendships/block/%ld/"
     private static let unBlockUser = "/friendships/unblock/%ld/"
     private static let userTags = "/usertags/%ld/feed/"
@@ -77,8 +85,8 @@ struct URLs {
     private static let startLive = "/live/%@/start/"
     private static let heartbeatAndViewerCount = "/live/%@/heartbeat_and_get_viewer_count/"
     private static let broadcastComments = "/live/%@/get_comment/"
-    
-    private static let instagramCookieUrl = "https://www.instagram.com/"
+    private static let recoverByEmail = "/accounts/send_recovery_flow_email/"
+    private static let storyViewers = "/media/%@/list_reel_media_viewer/"
     
     // MARK: - Methods
     
@@ -95,14 +103,6 @@ struct URLs {
         }
         
         throw CustomErrors.urlCreationFaild("Cant create URL for create live.")
-    }
-    
-    static func getTwoFactorLoginUrl() throws -> URL {
-        if let url = URL(string:baseInstagramApiUrl + accountTwoFactorLogin) {
-            return url
-        }
-        
-        throw CustomErrors.urlCreationFaild("Cant create URL for two factor login.")
     }
     
     static func getSendTwoFactorLoginSmsUrl() throws -> URL {
@@ -380,6 +380,34 @@ struct URLs {
         throw CustomErrors.urlCreationFaild("Cant create URL for get media comments.")
     }
     
+    static func removeFollowerUrl(for user: Int) throws -> URL {
+        if let url = URL(string: String(format: "%@%@", baseInstagramApiUrl, String(format: removeFollower, user))) {
+            return url
+        }
+        throw CustomErrors.urlCreationFaild("Cant create URL for remove follower.")
+    }
+    
+    static func approveFriendshipUrl(for user: Int) throws -> URL {
+        if let url = URL(string: String(format: "%@%@", baseInstagramApiUrl, String(format: approveFriendship, user))) {
+            return url
+        }
+        throw CustomErrors.urlCreationFaild("Cant create URL for approve friendship.")
+    }
+    
+    static func rejectFriendshipUrl(for user: Int) throws -> URL {
+        if let url = URL(string: String(format: "%@%@", baseInstagramApiUrl, String(format: rejectFriendship, user))) {
+            return url
+        }
+        throw CustomErrors.urlCreationFaild("Cant create URL for reject friendship.")
+    }
+
+    static func pendingFriendshipsUrl() throws -> URL {
+        if let url = URL(string: String(format: "%@%@", baseInstagramApiUrl, pendingFriendships)) {
+            return url
+        }
+        throw CustomErrors.urlCreationFaild("Cant create URL for pending friendships.")
+    }
+    
     static func getFollowUrl(for user: Int) throws -> URL {
         if let url = URL(string: String(format: "%@%@", baseInstagramApiUrl, String(format: followUser, user))) {
             return url
@@ -399,6 +427,20 @@ struct URLs {
             return url
         }
         throw CustomErrors.urlCreationFaild("Cant create URL for friendship status.")
+    }
+    
+    static func getFriendshipStatusesUrl() throws -> URL {
+        if let url = URL(string: String(format: "%@%@", baseInstagramApiUrl, friendshipStatuses)) {
+            return url
+        }
+        throw CustomErrors.urlCreationFaild("Cant create URL for current user.")
+    }
+    
+    static func getBlockedList() throws -> URL {
+        if let url = URL(string: String(format: "%@%@", baseInstagramApiUrl, blockedList)) {
+            return url
+        }
+        throw CustomErrors.urlCreationFaild("Cant create URL for blockedList.")
     }
     
     static func getBlockUrl(for user: Int) throws -> URL {
@@ -570,11 +612,41 @@ struct URLs {
         throw CustomErrors.urlCreationFaild("Cant create URL for verify login.")
     }
     
+    static func getMediaLikersUrl(mediaId: String) throws -> URL {
+        if let url = URL(string: String(format: "%@%@", baseInstagramApiUrl, String(format: mediaLikers, mediaId))) {
+            return url
+        }
+        throw CustomErrors.urlCreationFaild("Cant create URL for media likers.")
+    }
+    
     static func getInstagramCookieUrl() throws -> URL {
         if let url = URL(string: instagramCookieUrl) {
             return url
         }
         
-        throw CustomErrors.urlCreationFaild("Cant create URL for verify login.")
+        throw CustomErrors.urlCreationFaild("Cant create URL for instagram cookies.")
+    }
+    
+    static func getTwoFactorLoginUrl() throws -> URL {
+        if let url = URL(string: String(format: "%@%@", baseInstagramApiUrl, accountTwoFactorLogin)) {
+            return url
+        }
+        
+        throw CustomErrors.urlCreationFaild("Cant create URL for two factor login.")
+    }
+    
+    static func getRecoverByEmailUrl() throws -> URL {
+        if let url = URL(string: baseInstagramApiUrl + recoverByEmail) {
+            return url
+        }
+        
+        throw CustomErrors.urlCreationFaild("Cant create URL for recovery by email.")
+    }
+    
+    static func getStoryViewersUrl(pk: String) throws -> URL {
+        if let url = URL(string: baseInstagramApiUrl + String(format: storyViewers, pk)) {
+            return url
+        }
+        throw CustomErrors.urlCreationFaild("Cant create URL for story viewers.")
     }
 }

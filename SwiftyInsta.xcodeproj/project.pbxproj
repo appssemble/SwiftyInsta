@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		110454D5221DE7270080F986 /* AccountRecovery.swift in Sources */ = {isa = PBXBuildFile; fileRef = 110454D4221DE7270080F986 /* AccountRecovery.swift */; };
 		1104CD092180621400F855BA /* HTTPMethods.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1104CD082180621400F855BA /* HTTPMethods.swift */; };
 		1104CD0B2180627400F855BA /* CustomErrors.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1104CD0A2180627400F855BA /* CustomErrors.swift */; };
 		1104CD0D218062DD00F855BA /* AndroidDeviceModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1104CD0C218062DD00F855BA /* AndroidDeviceModel.swift */; };
@@ -40,12 +41,15 @@
 		115F1255217FF0E300ED3530 /* UserShortModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 115F1254217FF0E300ED3530 /* UserShortModel.swift */; };
 		115F1257217FF1BF00ED3530 /* AndroidDeviceGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 115F1256217FF1BF00ED3530 /* AndroidDeviceGenerator.swift */; };
 		115F1259217FF21E00ED3530 /* Devices.swift in Sources */ = {isa = PBXBuildFile; fileRef = 115F1258217FF21E00ED3530 /* Devices.swift */; };
+		1164FB532217FBB100A05EB1 /* CustomUserAgent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1164FB522217FBB100A05EB1 /* CustomUserAgent.swift */; };
 		116B149F21DEB64B00953A71 /* SessionCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = 116B149E21DEB64B00953A71 /* SessionCache.swift */; };
 		116C3F3B21A6EBE5003084DD /* MediaTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 116C3F3A21A6EBE5003084DD /* MediaTypes.swift */; };
 		1171E472218118A400579B04 /* DelayModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1171E471218118A400579B04 /* DelayModel.swift */; };
 		1171E4742181217100579B04 /* CommonCrypto.h in Headers */ = {isa = PBXBuildFile; fileRef = 1171E4732181217100579B04 /* CommonCrypto.h */; };
 		1171E47821812C9400579B04 /* LoginResultModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1171E47721812C9400579B04 /* LoginResultModel.swift */; };
 		11723A592187C23400968DA5 /* LoginResponseModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11723A582187C23400968DA5 /* LoginResponseModel.swift */; };
+		1177ACA721F34BE1008A0C4C /* MediaLikersModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1177ACA621F34BE1008A0C4C /* MediaLikersModel.swift */; };
+		117AACE922033B48008913FF /* TwoFactorEnums.swift in Sources */ = {isa = PBXBuildFile; fileRef = 117AACE822033B48008913FF /* TwoFactorEnums.swift */; };
 		117E65A221962ED5004626CC /* UserFeedModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 117E65A121962ED5004626CC /* UserFeedModel.swift */; };
 		11848602218A1DDB0067FFD6 /* UserModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11848601218A1DDB0067FFD6 /* UserModel.swift */; };
 		11848604218A1F460067FFD6 /* FriendshipStatusModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11848603218A1F460067FFD6 /* FriendshipStatusModel.swift */; };
@@ -78,12 +82,18 @@
 		11C487F8219B2A3B00E952A1 /* UserInfoModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11C487F7219B2A3B00E952A1 /* UserInfoModel.swift */; };
 		11C5F4DE21A059F4001EC550 /* testbundle.bundle in Resources */ = {isa = PBXBuildFile; fileRef = 11C5F4DD21A059F4001EC550 /* testbundle.bundle */; };
 		11D2AE0A21A02023007D7F1F /* CreateAccountModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11D2AE0921A02023007D7F1F /* CreateAccountModel.swift */; };
+		11D3779D22674E340023CF07 /* InstagramLoginWebViewDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11D3779C22674E340023CF07 /* InstagramLoginWebViewDelegate.swift */; };
+		11D377A022674E580023CF07 /* WKCookieWebView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11D3779F22674E580023CF07 /* WKCookieWebView.swift */; };
+		11D377A222674E6F0023CF07 /* WKCookieWebViewPreloader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11D377A122674E6F0023CF07 /* WKCookieWebViewPreloader.swift */; };
 		11DDE51F21A1F94B00754F0F /* AndroidVersion.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11DDE51E21A1F94B00754F0F /* AndroidVersion.swift */; };
+		11E148D82209F3300068C8AF /* HttpSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11E148D72209F3300068C8AF /* HttpSettings.swift */; };
 		11E2B135218F13D20095374A /* UserShortListModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11E2B134218F13D20095374A /* UserShortListModel.swift */; };
 		11F0CE6B2195CC2400C0F6A4 /* TimeLineModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11F0CE6A2195CC2400C0F6A4 /* TimeLineModel.swift */; };
 		C60B06B9220484390097B0F0 /* HeartbeatAndViewerResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = C60B06B8220484390097B0F0 /* HeartbeatAndViewerResponse.swift */; };
 		C60B155B21ECCFE000476FE2 /* CreateLiveBroadcastResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = C60B155A21ECCFE000476FE2 /* CreateLiveBroadcastResponse.swift */; };
 		C692808821EDC2BF00DF8153 /* StartLiveBroadcastResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = C692808721EDC2BF00DF8153 /* StartLiveBroadcastResponse.swift */; };
+		11F57CC4229D2E78001A1C0A /* BlockedUsersModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11F57CC3229D2E78001A1C0A /* BlockedUsersModel.swift */; };
+		E8314D5E2210652400D13BEA /* UserTags.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8314D5D2210652400D13BEA /* UserTags.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -97,6 +107,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		110454D4221DE7270080F986 /* AccountRecovery.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountRecovery.swift; sourceTree = "<group>"; };
 		1104CD082180621400F855BA /* HTTPMethods.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HTTPMethods.swift; sourceTree = "<group>"; };
 		1104CD0A2180627400F855BA /* CustomErrors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomErrors.swift; sourceTree = "<group>"; };
 		1104CD0C218062DD00F855BA /* AndroidDeviceModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AndroidDeviceModel.swift; sourceTree = "<group>"; };
@@ -133,12 +144,15 @@
 		115F1254217FF0E300ED3530 /* UserShortModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserShortModel.swift; sourceTree = "<group>"; };
 		115F1256217FF1BF00ED3530 /* AndroidDeviceGenerator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AndroidDeviceGenerator.swift; sourceTree = "<group>"; };
 		115F1258217FF21E00ED3530 /* Devices.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Devices.swift; sourceTree = "<group>"; };
+		1164FB522217FBB100A05EB1 /* CustomUserAgent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomUserAgent.swift; sourceTree = "<group>"; };
 		116B149E21DEB64B00953A71 /* SessionCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionCache.swift; sourceTree = "<group>"; };
 		116C3F3A21A6EBE5003084DD /* MediaTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaTypes.swift; sourceTree = "<group>"; };
 		1171E471218118A400579B04 /* DelayModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DelayModel.swift; sourceTree = "<group>"; };
 		1171E4732181217100579B04 /* CommonCrypto.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CommonCrypto.h; sourceTree = "<group>"; };
 		1171E47721812C9400579B04 /* LoginResultModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginResultModel.swift; sourceTree = "<group>"; };
 		11723A582187C23400968DA5 /* LoginResponseModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginResponseModel.swift; sourceTree = "<group>"; };
+		1177ACA621F34BE1008A0C4C /* MediaLikersModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaLikersModel.swift; sourceTree = "<group>"; };
+		117AACE822033B48008913FF /* TwoFactorEnums.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TwoFactorEnums.swift; sourceTree = "<group>"; };
 		117E65A121962ED5004626CC /* UserFeedModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserFeedModel.swift; sourceTree = "<group>"; };
 		11848601218A1DDB0067FFD6 /* UserModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserModel.swift; sourceTree = "<group>"; };
 		11848603218A1F460067FFD6 /* FriendshipStatusModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FriendshipStatusModel.swift; sourceTree = "<group>"; };
@@ -171,12 +185,18 @@
 		11C487F7219B2A3B00E952A1 /* UserInfoModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserInfoModel.swift; sourceTree = "<group>"; };
 		11C5F4DD21A059F4001EC550 /* testbundle.bundle */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.plug-in"; path = testbundle.bundle; sourceTree = "<group>"; };
 		11D2AE0921A02023007D7F1F /* CreateAccountModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreateAccountModel.swift; sourceTree = "<group>"; };
+		11D3779C22674E340023CF07 /* InstagramLoginWebViewDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InstagramLoginWebViewDelegate.swift; sourceTree = "<group>"; };
+		11D3779F22674E580023CF07 /* WKCookieWebView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WKCookieWebView.swift; sourceTree = "<group>"; };
+		11D377A122674E6F0023CF07 /* WKCookieWebViewPreloader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WKCookieWebViewPreloader.swift; sourceTree = "<group>"; };
 		11DDE51E21A1F94B00754F0F /* AndroidVersion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AndroidVersion.swift; sourceTree = "<group>"; };
+		11E148D72209F3300068C8AF /* HttpSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HttpSettings.swift; sourceTree = "<group>"; };
 		11E2B134218F13D20095374A /* UserShortListModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserShortListModel.swift; sourceTree = "<group>"; };
 		11F0CE6A2195CC2400C0F6A4 /* TimeLineModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimeLineModel.swift; sourceTree = "<group>"; };
 		C60B06B8220484390097B0F0 /* HeartbeatAndViewerResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HeartbeatAndViewerResponse.swift; sourceTree = "<group>"; };
 		C60B155A21ECCFE000476FE2 /* CreateLiveBroadcastResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreateLiveBroadcastResponse.swift; sourceTree = "<group>"; };
 		C692808721EDC2BF00DF8153 /* StartLiveBroadcastResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StartLiveBroadcastResponse.swift; sourceTree = "<group>"; };
+		11F57CC3229D2E78001A1C0A /* BlockedUsersModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlockedUsersModel.swift; sourceTree = "<group>"; };
+		E8314D5D2210652400D13BEA /* UserTags.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserTags.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -219,6 +239,7 @@
 		115F1209217FDD8B00ED3530 /* SwiftyInsta */ = {
 			isa = PBXGroup;
 			children = (
+				11D3779B22674E240023CF07 /* Web */,
 				115F1237217FE7F400ED3530 /* API */,
 				115F1248217FEB8100ED3530 /* Classes */,
 				115F1236217FE7A200ED3530 /* Helpers */,
@@ -270,6 +291,7 @@
 				1104CD102180644100F855BA /* HttpHelper.swift */,
 				112E735B2180E86B0048A8D7 /* CryptoHelper.swift */,
 				110B3F9A21A2CE4D0019523A /* Extensions.swift */,
+				11E148D72209F3300068C8AF /* HttpSettings.swift */,
 			);
 			path = Helpers;
 			sourceTree = "<group>";
@@ -342,6 +364,11 @@
 				C60B155A21ECCFE000476FE2 /* CreateLiveBroadcastResponse.swift */,
 				C692808721EDC2BF00DF8153 /* StartLiveBroadcastResponse.swift */,
 				C60B06B8220484390097B0F0 /* HeartbeatAndViewerResponse.swift */,
+				1177ACA621F34BE1008A0C4C /* MediaLikersModel.swift */,
+				E8314D5D2210652400D13BEA /* UserTags.swift */,
+				1164FB522217FBB100A05EB1 /* CustomUserAgent.swift */,
+				110454D4221DE7270080F986 /* AccountRecovery.swift */,
+				11F57CC3229D2E78001A1C0A /* BlockedUsersModel.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -365,6 +392,7 @@
 				116C3F3A21A6EBE5003084DD /* MediaTypes.swift */,
 				115CA6DC21AFFB2700769B00 /* GenderTypes.swift */,
 				1195D5A621B1E6E900C71FE7 /* VerifyTypes.swift */,
+				117AACE822033B48008913FF /* TwoFactorEnums.swift */,
 			);
 			path = Enums;
 			sourceTree = "<group>";
@@ -372,6 +400,7 @@
 		115F1248217FEB8100ED3530 /* Classes */ = {
 			isa = PBXGroup;
 			children = (
+				11D3779E22674E4B0023CF07 /* WKCookieWebView */,
 				115F124D217FEBF900ED3530 /* Devices */,
 				115F1247217FEA9D00ED3530 /* Enums */,
 				115F1239217FE83B00ED3530 /* Models */,
@@ -402,6 +431,23 @@
 				115F124C217FEBF000ED3530 /* iOS */,
 			);
 			path = Devices;
+			sourceTree = "<group>";
+		};
+		11D3779B22674E240023CF07 /* Web */ = {
+			isa = PBXGroup;
+			children = (
+				11D3779C22674E340023CF07 /* InstagramLoginWebViewDelegate.swift */,
+			);
+			path = Web;
+			sourceTree = "<group>";
+		};
+		11D3779E22674E4B0023CF07 /* WKCookieWebView */ = {
+			isa = PBXGroup;
+			children = (
+				11D3779F22674E580023CF07 /* WKCookieWebView.swift */,
+				11D377A122674E6F0023CF07 /* WKCookieWebViewPreloader.swift */,
+			);
+			path = WKCookieWebView;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -523,10 +569,13 @@
 				1143E0C821809E7700D9FF31 /* ResponseTypes.swift in Sources */,
 				11AE440421A99CD400BD9EFB /* FeedHandler.swift in Sources */,
 				11AE440821A99CD400BD9EFB /* HandlerSettings.swift in Sources */,
+				11E148D82209F3300068C8AF /* HttpSettings.swift in Sources */,
 				11C487F8219B2A3B00E952A1 /* UserInfoModel.swift in Sources */,
 				11AE440521A99CD400BD9EFB /* UserHandler.swift in Sources */,
+				11F57CC4229D2E78001A1C0A /* BlockedUsersModel.swift in Sources */,
 				11905DFD2191C2C100FF297A /* CurrentUserModel.swift in Sources */,
 				112022982188AACF00CA58BA /* BaseStatusResponseModel.swift in Sources */,
+				117AACE922033B48008913FF /* TwoFactorEnums.swift in Sources */,
 				117E65A221962ED5004626CC /* UserFeedModel.swift in Sources */,
 				114B848221871E1500F84161 /* TwoFactorLoginInfoModel.swift in Sources */,
 				11A95BEF21AC0B9800839250 /* StoryHandler.swift in Sources */,
@@ -545,19 +594,26 @@
 				11B9567221944F70006661A6 /* ExploreFeedModel.swift in Sources */,
 				11D2AE0A21A02023007D7F1F /* CreateAccountModel.swift in Sources */,
 				115F1244217FEA4400ED3530 /* Headers.swift in Sources */,
+				110454D5221DE7270080F986 /* AccountRecovery.swift in Sources */,
 				110B3F9B21A2CE4D0019523A /* Extensions.swift in Sources */,
+				E8314D5E2210652400D13BEA /* UserTags.swift in Sources */,
 				11AE440321A99CD400BD9EFB /* CommentHandler.swift in Sources */,
 				11905DFF2191C98600FF297A /* ProfilePicVersionsModel.swift in Sources */,
 				115F1246217FEA5200ED3530 /* URLs.swift in Sources */,
 				115F1257217FF1BF00ED3530 /* AndroidDeviceGenerator.swift in Sources */,
+				11D377A022674E580023CF07 /* WKCookieWebView.swift in Sources */,
 				115F1251217FEF6800ED3530 /* ResultInfo.swift in Sources */,
+				11D377A222674E6F0023CF07 /* WKCookieWebViewPreloader.swift in Sources */,
+				11D3779D22674E340023CF07 /* InstagramLoginWebViewDelegate.swift in Sources */,
 				11723A592187C23400968DA5 /* LoginResponseModel.swift in Sources */,
 				1131A45421974F9D00497992 /* TagFeedModel.swift in Sources */,
 				C60B06B9220484390097B0F0 /* HeartbeatAndViewerResponse.swift in Sources */,
 				11B9568621945F09006661A6 /* VideoVersionModel.swift in Sources */,
 				112E735C2180E86B0048A8D7 /* CryptoHelper.swift in Sources */,
 				11C439D4219A429B00467381 /* ProfilePrivacyResponseModel.swift in Sources */,
+				1177ACA721F34BE1008A0C4C /* MediaLikersModel.swift in Sources */,
 				115F1255217FF0E300ED3530 /* UserShortModel.swift in Sources */,
+				1164FB532217FBB100A05EB1 /* CustomUserAgent.swift in Sources */,
 				11DDE51F21A1F94B00754F0F /* AndroidVersion.swift in Sources */,
 				1195D5A721B1E6E900C71FE7 /* VerifyTypes.swift in Sources */,
 				11B9567C219454B9006661A6 /* ExploreItemInfoModel.swift in Sources */,

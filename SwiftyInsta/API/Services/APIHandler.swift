@@ -68,13 +68,13 @@ public class APIHandler: APIHandlerProtocol {
         
     }
     
-    public init(request: RequestMessageModel, user: SessionStorage, device: AndroidDeviceModel, delay: DelayModel, config: URLSessionConfiguration) {
+    public init(request: RequestMessageModel, user: SessionStorage, device: AndroidDeviceModel, delay: DelayModel, urlSession: URLSession) {
         // TODO: - Update Handler Settings
         HandlerSettings.shared.delay = delay
         HandlerSettings.shared.user = user
         HandlerSettings.shared.device = device
         HandlerSettings.shared.request = request
-        HandlerSettings.shared.httpHelper = HttpHelper(config: config)
+        HandlerSettings.shared.httpHelper = HttpHelper(urlSession: urlSession)
         HandlerSettings.shared.queue = DispatchQueue.global(qos: .utility)
         HandlerSettings.shared.isUserAuthenticated = false
     }
@@ -101,8 +101,10 @@ public class APIHandler: APIHandlerProtocol {
         })
     }
     
-    public func sendTwoFactorLoginSms(completion: @escaping SendTwoFactorLoginSmsClosure) throws {
-        try UserHandler.shared.sendTwoFactorLoginSms(completion: { (result) -> (Void) in
+
+    /// Resend TwoFactor Sms
+    public func sendTwoFactorLoginSms(completion: @escaping (Result<Bool>) -> ()) throws {
+        try UserHandler.shared.sendTwoFactorLoginSms(completion: { (result) in
             completion(result)
         })
     }
@@ -242,6 +244,16 @@ public class APIHandler: APIHandlerProtocol {
         try UserHandler.shared.logout { (result) in
             completion(result)
         }
+    }
+    
+    public func searchUser(username: String, completion: @escaping (Result<[UserModel]>) -> ()) throws {
+        // validate before logout.
+        try validateUser()
+        try validateLoggedIn()
+        
+        try UserHandler.shared.searchUser(username: username, completion: { (result) in
+            completion(result)
+        })
     }
     
     public func getUser(username: String, completion: @escaping (Result<UserModel>) -> ()) throws {
@@ -464,12 +476,60 @@ public class APIHandler: APIHandlerProtocol {
         })
     }
     
+    public func getMediaLikers(mediaId: String, completion: @escaping (Result<MediaLikersModel>) -> ()) throws {
+        // validate before request.
+        try validateUser()
+        try validateLoggedIn()
+        
+        try MediaHandler.shared.getMediaLikers(mediaId: mediaId, completion: { (result) in
+            completion(result)
+        })
+    }
+    
     public func getMediaComments(mediaId: String, paginationParameter: PaginationParameters, completion: @escaping (Result<[MediaCommentsResponseModel]>) -> ()) throws {
         // validate before request.
         try validateUser()
         try validateLoggedIn()
         
         try CommentHandler.shared.getMediaComments(mediaId: mediaId, paginationParameter: paginationParameter, completion: { (result) in
+            completion(result)
+        })
+    }
+    
+    public func removeFollower(userId: Int, completion: @escaping (Result<FollowResponseModel>) -> ()) throws {
+        try validateUser()
+        try validateLoggedIn()
+        
+        try UserHandler.shared.removeFollower(userId: userId, completion: { (result) in
+            completion(result)
+        })
+    }
+    
+    public func approveFriendship(userId: Int, completion: @escaping (Result<FollowResponseModel>) -> ()) throws {
+        try validateUser()
+        try validateLoggedIn()
+        
+        try UserHandler.shared.approveFriendship(userId: userId, completion: { (result) in
+            completion(result)
+        })
+
+    }
+    
+    public func rejectFriendship(userId: Int, completion: @escaping (Result<FollowResponseModel>) -> ()) throws {
+        try validateUser()
+        try validateLoggedIn()
+        
+        try UserHandler.shared.rejectFriendship(userId: userId, completion: { (result) in
+            completion(result)
+        })
+
+    }
+    
+    public func pendingFriendships(completion: @escaping (Result<PendingFriendshipsModel>) -> ()) throws {
+        try validateUser()
+        try validateLoggedIn()
+        
+        try UserHandler.shared.pendingFriendships(completion: { (result) in
             completion(result)
         })
     }
@@ -502,6 +562,25 @@ public class APIHandler: APIHandlerProtocol {
         try UserHandler.shared.getFriendshipStatus(of: userId) { (result) in
             completion(result)
         }
+    }
+    
+    public func getFriendshipStatuses(of userIds: [Int], completion: @escaping (Result<FriendshipStatusesModel>) -> ()) throws {
+        try validateUser()
+        try validateLoggedIn()
+        
+        try UserHandler.shared.getFriendshipStatuses(of: userIds) { (result) in
+            completion(result)
+        }
+        
+    }
+    
+    public func getBlockedList(completion: @escaping (Result<BlockedUsersModel>) -> ()) throws {
+        try validateUser()
+        try validateLoggedIn()
+        
+        try UserHandler.shared.getBlockedList(completion: { (result) in
+            completion(result)
+        })
     }
     
     public func block(userId: Int, completion: @escaping (Result<FollowResponseModel>) -> ()) throws {
@@ -550,6 +629,16 @@ public class APIHandler: APIHandlerProtocol {
         try validateLoggedIn()
         
         try MediaHandler.shared.uploadPhotoAlbum(photos: photos, caption: caption, completion: { (result) in
+            completion(result)
+        })
+    }
+    
+    public func uploadVideo(video: InstaVideo, imageThumbnail: InstaPhoto, caption: String, completion: @escaping (Result<MediaModel>) -> ()) throws {
+        // validate before request.
+        try validateUser()
+        try validateLoggedIn()
+        
+        try MediaHandler.shared.uploadVideo(video: video, imageThumbnail: imageThumbnail, caption: caption, completion: { (result) in
             completion(result)
         })
     }
@@ -634,6 +723,16 @@ public class APIHandler: APIHandlerProtocol {
         })
     }
     
+    public func getStoryViewers(storyPk: String?, completion: @escaping (Result<StoryViewers>) -> ()) throws {
+        // validate before request.
+        try validateUser()
+        try validateLoggedIn()
+        
+        try StoryHandler.shared.getStoryViewers(storyPk: storyPk, completion: { (result) in
+            completion(result)
+        })
+    }
+    
     public func editProfile(name: String, biography: String, url: String, email: String, phone: String, gender: GenderTypes, newUsername: String, completion: @escaping (Result<EditProfileModel>) -> ()) throws {
         // validate before request.
         try validateUser()
@@ -674,12 +773,24 @@ public class APIHandler: APIHandlerProtocol {
         })
     }
     
-    public func editMedia(mediaId: String, caption: String, completion: @escaping (Result<MediaModel>) -> ()) throws {
+    public func editMedia(mediaId: String, caption: String, tags: UserTags, completion: @escaping (Result<MediaModel>) -> ()) throws {
         // validate before request.
         try validateUser()
         try validateLoggedIn()
         
-        try MediaHandler.shared.editMedia(mediaId: mediaId, caption: caption, completion: { (result) in
+        try MediaHandler.shared.editMedia(mediaId: mediaId, caption: caption, tags: tags, completion: { (result) in
+            completion(result)
+        })
+    }
+    
+    public func recoverAccountBy(username: String, completion: @escaping (Result<AccountRecovery>) -> ()) throws {
+        try UserHandler.shared.recoverAccountBy(username: username, completion: { (result) in
+            completion(result)
+        })
+    }
+    
+    public func recoverAccountBy(email: String, completion: @escaping (Result<AccountRecovery>) -> ()) throws {
+        try UserHandler.shared.recoverAccountBy(email: email, completion: { (result) in
             completion(result)
         })
     }

@@ -13,11 +13,12 @@ public protocol UserHandlerProtocol {
     func login(completion: @escaping (Result<LoginResultModel>, SessionCache?) -> ()) throws
     func login(cache: SessionCache, completion: @escaping (Result<LoginResultModel>) -> ()) throws
     func twoFactorLogin(verificationCode: String, useBackupCode: Bool, completion: @escaping (Result<LoginResultModel>, SessionCache?) -> ()) throws
-    func sendTwoFactorLoginSms(completion: @escaping SendTwoFactorLoginSmsClosure) throws
+    func sendTwoFactorLoginSms(completion: @escaping (Result<Bool>) -> ()) throws
     func challengeLogin(completion: @escaping (Result<ResponseTypes>) -> ()) throws
     func verifyMethod(of type: VerifyTypes, completion: @escaping (Result<VerifyResponse>) ->()) throws
     func sendVerifyCode(securityCode: String, completion: @escaping (Result<LoginResultModel>, SessionCache?) -> ()) throws
     func logout(completion: @escaping (Result<Bool>) -> ()) throws
+    func searchUser(username: String, completion: @escaping (Result<[UserModel]>) -> ()) throws
     func getUser(username: String, completion: @escaping (Result<UserModel>) -> ()) throws
     func getUser(id: Int, completion: @escaping (Result<UserInfoModel>) -> ()) throws
     func getUserTags(userId: Int, paginationParameter: PaginationParameters, completion: @escaping (Result<[UserFeedModel]>) -> ()) throws
@@ -26,23 +27,19 @@ public protocol UserHandlerProtocol {
     func getCurrentUser(completion: @escaping (Result<CurrentUserModel>) -> ()) throws
     func getRecentActivities(paginationParameter: PaginationParameters, completion: @escaping (Result<[RecentActivitiesModel]>) -> ()) throws
     func getRecentFollowingActivities(paginationParameter: PaginationParameters, completion: @escaping (Result<[RecentFollowingsActivitiesModel]>) -> ()) throws
+    func removeFollower(userId: Int, completion: @escaping (Result<FollowResponseModel>) -> ()) throws
+    func approveFriendship(userId: Int, completion: @escaping (Result<FollowResponseModel>) -> ()) throws
+    func rejectFriendship(userId: Int, completion: @escaping (Result<FollowResponseModel>) -> ()) throws
+    func pendingFriendships(completion: @escaping (Result<PendingFriendshipsModel>) -> ()) throws
     func followUser(userId: Int, completion: @escaping (Result<FollowResponseModel>) -> ()) throws
     func unFollowUser(userId: Int, completion: @escaping (Result<FollowResponseModel>) -> ()) throws
     func getFriendshipStatus(of userId: Int, completion: @escaping (Result<FriendshipStatusModel>) -> ()) throws
+    func getFriendshipStatuses(of userIds: [Int], completion: @escaping (Result<FriendshipStatusesModel>) -> ()) throws
+    func getBlockedList(completion: @escaping (Result<BlockedUsersModel>) -> ()) throws
     func block(userId: Int, completion: @escaping (Result<FollowResponseModel>) -> ()) throws
     func unBlock(userId: Int, completion: @escaping (Result<FollowResponseModel>) -> ()) throws
-}
-
-public enum TwoFactorVerificationMethodsEnum: String {
-    case none = "0"
-    case sms = "1"
-    case backup = "2"
-    case totp = "3"
-}
-
-public enum TwoFactorLoginErrorTypeEnum: String {
-    case invalidCode = "sms_code_validation_code_invalid"
-    case missingCode = "sms_code_validation_code_missing"
+    func recoverAccountBy(email: String, completion: @escaping (Result<AccountRecovery>) -> ()) throws
+    func recoverAccountBy(username: String, completion: @escaping (Result<AccountRecovery>) -> ()) throws
 }
 
 class UserHandler: UserHandlerProtocol {
@@ -52,6 +49,7 @@ class UserHandler: UserHandlerProtocol {
     private init() {
         
     }
+    
     
     func login(cache: SessionCache, completion: @escaping (Result<LoginResultModel>) -> ()) throws {
         if cache.isUserAuthenticated {
@@ -82,6 +80,7 @@ class UserHandler: UserHandlerProtocol {
                 // find CSRF token
                 let fields = response?.allHeaderFields
                 let cookies = HTTPCookie.cookies(withResponseHeaderFields: fields as! [String : String], for: (response?.url)!)
+                
                 for cookie in cookies {
                     if cookie.name == "csrftoken" {
                         HandlerSettings.shared.user!.csrfToken = cookie.value
@@ -98,7 +97,7 @@ class UserHandler: UserHandlerProtocol {
                 let signature = "\(HandlerSettings.shared.request!.generateSignature(signatureKey: Headers.HeaderIGSignatureValue)).\(HandlerSettings.shared.request!.getMessageString())"
                 
                 let body: [String: Any] = [
-                    Headers.HeaderIGSignatureKey: signature.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!,
+                    Headers.HeaderIGSignatureKey: signature.addingPercentEncoding(withAllowedCharacters: .rfc3986Unreserved)!,
                     Headers.HeaderIGSignatureVersionKey: Headers.HeaderIGSignatureVersionValue
                 ]
                 
@@ -111,20 +110,27 @@ class UserHandler: UserHandlerProtocol {
                         decoder.keyDecodingStrategy = .convertFromSnakeCase
                         
                         if let data = data {
+                            print(String(data: data, encoding: .utf8)!)
                             if response?.statusCode != 200 {
                                 do {
-                                    let loginFailReason = try decoder.decode(LoginBaseResponseModel.self, from: data)
-                                    if loginFailReason.invalidCredentials ?? false || loginFailReason.errorType == "bad_password" {
-                                        let value = (loginFailReason.errorType == "bad_password" ? LoginResultModel.badPassword : LoginResultModel.invalidUser)
+                                    var loginFailReason = try decoder.decode(LoginBaseResponseModel.self, from: data)
+                                    if loginFailReason.errorType == nil {
+                                        loginFailReason.errorType = ""
+                                    }
+                                    guard let errorType = loginFailReason.errorType else { return }
+                                    if loginFailReason.invalidCredentials ?? false || errorType == "bad_password" {
+                                        let value = (errorType == "bad_password" ? LoginResultModel.badPassword : LoginResultModel.invalidUser)
                                         completion(Return.fail(error: CustomErrors.invalidCredentials, response: .fail, value: value), nil)
                                     } else if loginFailReason.twoFactorRequired ?? false {
                                         HandlerSettings.shared.twoFactor = loginFailReason.twoFactorInfo
+                                        
                                         if loginFailReason.twoFactorInfo?.totpTwoFactorOn == true {
                                             completion(Return.fail(error: CustomErrors.twoFactorAuthentication, response: .totp, value: .twoFactorRequired), nil)
                                         } else {
-                                        completion(Return.fail(error: CustomErrors.twoFactorAuthentication, response: .sms(obfuscatedPhoneNumber: loginFailReason.twoFactorInfo!.obfuscatedPhoneNumber), value: .twoFactorRequired), nil)
+                                            completion(Return.fail(error: CustomErrors.twoFactorAuthentication, response: .sms(obfuscatedPhoneNumber: loginFailReason.twoFactorInfo!.obfuscatedPhoneNumber), value: .twoFactorRequired), nil)
                                         }
-                                    } else if loginFailReason.checkpointChallengeRequired ?? false || loginFailReason.errorType == "checkpoint_challenge_required" {
+                                        
+                                    } else if loginFailReason.checkpointChallengeRequired ?? false || errorType == "checkpoint_challenge_required" {
                                         HandlerSettings.shared.challenge = loginFailReason.challenge
                                         completion(Return.fail(error: CustomErrors.challengeRequired, response: .ok, value: .challengeRequired), nil)
                                     } else {
@@ -150,6 +156,75 @@ class UserHandler: UserHandlerProtocol {
                         }
                     }
                 })
+            }
+        }
+    }
+    
+    func twoFactorLogin(verificationCode: String, useBackupCode: Bool, completion: @escaping (Result<LoginResultModel>, SessionCache?) -> ()) throws {
+        var verificationMethod = TwoFactorVerificationMethodsEnum.none.rawValue
+        
+        if useBackupCode {
+            verificationMethod = TwoFactorVerificationMethodsEnum.backup.rawValue
+        } else if HandlerSettings.shared.twoFactor?.totpTwoFactorOn == true {
+            verificationMethod = TwoFactorVerificationMethodsEnum.totp.rawValue
+        } else if HandlerSettings.shared.twoFactor?.smsTwoFactorOn == true {
+            verificationMethod = TwoFactorVerificationMethodsEnum.sms.rawValue
+        }
+        
+        let body = getTwoFactorLoginRequestBody(verificationCode: verificationCode, verificationMethod: verificationMethod)
+        
+        HandlerSettings.shared.httpHelper!.sendAsync(method: .post, url: try URLs.getTwoFactorLoginUrl(), body: body, header: [:]) { (data, response, error) in
+            if let error = error {
+                completion(Return.fail(error: error, response: .unknown, value: nil), nil)
+            } else {
+                let decoder = JSONDecoder()
+                decoder.keyDecodingStrategy = .convertFromSnakeCase
+                
+                if let data = data {
+                    if response?.statusCode != 200 {
+                        do {
+                            var loginFailReason = try decoder.decode(LoginBaseResponseModel.self, from: data)
+                            if loginFailReason.errorType == nil {
+                                loginFailReason.errorType = ""
+                            }
+                            guard let errorType = loginFailReason.errorType else { return }
+                            if errorType == TwoFactorLoginErrorTypeEnum.invalidCode.rawValue {
+                                completion(Return.fail(error: CustomErrors.invalidTwoFactorCode, response: .fail, value: nil), nil)
+                            } else if errorType == TwoFactorLoginErrorTypeEnum.missingCode.rawValue {
+                                completion(Return.fail(error: CustomErrors.missingTwoFactorCode, response: .fail, value: nil), nil)
+                            } else {
+                                completion(Return.fail(error: CustomErrors.unExpected("unExpected Error"), response: .fail, value: nil), nil)
+                            }
+                        } catch {
+                            completion(Return.fail(error: error, response: .ok, value: nil), nil)
+                        }
+                    } else {
+                        do {
+                            let loginInfo = try decoder.decode(LoginResponseModel.self, from: data)
+                            HandlerSettings.shared.user!.loggedInUser = loginInfo.loggedInUser
+                            HandlerSettings.shared.isUserAuthenticated = (loginInfo.loggedInUser.username?.lowercased() == HandlerSettings.shared.user!.username.lowercased())
+                            HandlerSettings.shared.user!.rankToken = "\(HandlerSettings.shared.user!.loggedInUser.pk ?? 0)_\(HandlerSettings.shared.request!.phoneId )"
+                            
+                            let sessionCache = SessionCache.init(user: HandlerSettings.shared.user!, device: HandlerSettings.shared.device!, requestMessage: HandlerSettings.shared.request!, cookies: (HTTPCookieStorage.shared.cookies?.getInstagramCookies()?.toCookieData())!, isUserAuthenticated: true)
+                            completion(Return.success(value: .success), sessionCache)
+                        } catch {
+                            completion(Return.fail(error: error, response: .ok, value: nil), nil)
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    // resend twofactor sms
+    func sendTwoFactorLoginSms(completion: @escaping (Result<Bool>) -> ()) throws {
+        let body = getTwoFactorLoginSmsRequestBody()
+        
+        HandlerSettings.shared.httpHelper!.sendAsync(method: .post, url: try URLs.getSendTwoFactorLoginSmsUrl(), body: body, header: [:]) { (data, response, error) in
+            if response?.statusCode == 200 {
+                completion(Return.success(value: true))
+            } else {
+                completion(Return.fail(error: error, response: .fail, value: false))
             }
         }
     }
@@ -204,56 +279,6 @@ class UserHandler: UserHandlerProtocol {
         return body
     }
     
-    func twoFactorLogin(verificationCode: String, useBackupCode: Bool, completion: @escaping (Result<LoginResultModel>, SessionCache?) -> ()) throws {
-        var verificationMethod = TwoFactorVerificationMethodsEnum.none.rawValue
-        
-        if useBackupCode {
-            verificationMethod = TwoFactorVerificationMethodsEnum.backup.rawValue
-        } else if HandlerSettings.shared.twoFactor?.totpTwoFactorOn == true {
-            verificationMethod = TwoFactorVerificationMethodsEnum.totp.rawValue
-        } else if HandlerSettings.shared.twoFactor?.smsTwoFactorOn == true {
-            verificationMethod = TwoFactorVerificationMethodsEnum.sms.rawValue
-        }
-        
-        let body = getTwoFactorLoginRequestBody(verificationCode: verificationCode, verificationMethod: verificationMethod)
-        
-        HandlerSettings.shared.httpHelper!.sendAsync(method: .post, url: try! URLs.getTwoFactorLoginUrl(), body: body, header: [:]) { (data, response, error) in
-            if let error = error {
-                completion(Return.fail(error: error, response: .unknown, value: nil), nil)
-            } else {
-                let decoder = JSONDecoder()
-                decoder.keyDecodingStrategy = .convertFromSnakeCase
-                
-                if let data = data {
-                    if response?.statusCode != 200 {
-                        do {
-                            let loginFailReason = try decoder.decode(LoginBaseResponseModel.self, from: data)
-                            if loginFailReason.errorType == TwoFactorLoginErrorTypeEnum.invalidCode.rawValue {
-                                completion(Return.fail(error: CustomErrors.invalidTwoFactorCode, response: .fail, value: nil), nil)
-                            } else if loginFailReason.errorType == TwoFactorLoginErrorTypeEnum.missingCode.rawValue {
-                                completion(Return.fail(error: CustomErrors.missingTwoFactorCode, response: .fail, value: nil), nil)
-                            }
-                        } catch {
-                            completion(Return.fail(error: error, response: .ok, value: nil), nil)
-                        }
-                    } else {
-                        do {
-                            let loginInfo = try decoder.decode(LoginResponseModel.self, from: data)
-                            HandlerSettings.shared.user!.loggedInUser = loginInfo.loggedInUser
-                            HandlerSettings.shared.isUserAuthenticated = (loginInfo.loggedInUser.username?.lowercased() == HandlerSettings.shared.user!.username.lowercased())
-                            HandlerSettings.shared.user!.rankToken = "\(HandlerSettings.shared.user!.loggedInUser.pk ?? 0)_\(HandlerSettings.shared.request!.phoneId )"
-                            
-                            let sessionCache = SessionCache.init(user: HandlerSettings.shared.user!, device: HandlerSettings.shared.device!, requestMessage: HandlerSettings.shared.request!, cookies: (HTTPCookieStorage.shared.cookies?.getInstagramCookies()?.toCookieData())!, isUserAuthenticated: true)
-                            completion(Return.success(value: .success), sessionCache)
-                        } catch {
-                            completion(Return.fail(error: error, response: .ok, value: nil), nil)
-                        }
-                    }
-                }
-            }
-        }
-    }
-
     private func getTwoFactorLoginSmsRequestBody() -> [String: Any]{
         let content = [
             "two_factor_identifier" : HandlerSettings.shared.twoFactor!.twoFactorIdentifier,
@@ -440,6 +465,40 @@ class UserHandler: UserHandlerProtocol {
         })
     }
     
+    func searchUser(username: String, completion: @escaping (Result<[UserModel]>) -> ()) throws {
+        let headers = [
+            Headers.HeaderTimeZoneOffsetKey: Headers.HeaderTimeZoneOffsetValue,
+            Headers.HeaderCountKey: Headers.HeaderCountValue,
+            Headers.HeaderRankTokenKey: HandlerSettings.shared.user!.rankToken
+        ]
+        
+        HandlerSettings.shared.httpHelper!.sendAsync(method: .get, url: try URLs.getUserUrl(username: username), body: [:], header: headers, completion: { (data, response, error) in
+            if let error = error {
+                completion(Return.fail(error: error, response: .fail, value: nil))
+            } else {
+                if let data = data {
+                    let decoder = JSONDecoder()
+                    decoder.keyDecodingStrategy = .convertFromSnakeCase
+                    do {
+                        let info = try decoder.decode(SearchUserModel.self, from: data)
+                        if let users = info.users {
+                            completion(Return.success(value: users))
+                        } else {
+                            // Couldn't find the user.
+                            let error = CustomErrors.unExpected("Couldn't find the user: \(username)")
+                            completion(Return.fail(error: error, response: .ok, value: nil))                        }
+                    } catch {
+                        completion(Return.fail(error: error, response: .ok, value: nil))
+                    }
+                } else {
+                    // nil data.
+                    let error = CustomErrors.unExpected("The data couldn’t be read because it is missing error when decoding JSON.")
+                    completion(Return.fail(error: error, response: .ok, value: nil))
+                }
+            }
+        })
+    }
+    
     func getUser(username: String, completion: @escaping (Result<UserModel>) -> ()) throws {
         let headers = [
             Headers.HeaderTimeZoneOffsetKey: Headers.HeaderTimeZoneOffsetValue,
@@ -548,46 +607,51 @@ class UserHandler: UserHandlerProtocol {
     
     func getUserFollowing(username: String, paginationParameter: PaginationParameters, searchQuery: String = "", completion: @escaping (Result<[UserShortModel]>) -> ()) throws {
         
-        try getUser(username: username) { [weak self] (user) in
-            if user.isSucceeded {
-                // - Parameter searchQuery: search for specific username
-                let url = try! URLs.getUserFollowing(userPk: user.value?.pk, rankToken: HandlerSettings.shared.user!.rankToken, searchQuery: searchQuery, maxId: paginationParameter.nextId)
-                var following: [UserShortModel] = []
-                self?.getFollowingList(from: url, completion: { (result) in
-                    if result.isSucceeded && result.value?.users != nil {
-                        following.append(contentsOf: result.value!.users!)
-                        completion(Return.success(value: following))
-                    } else {
-                        completion(Return.fail(error: result.info.error, response: .ok, value: nil))
-                    }
-                })
-            } else {
-                completion(Return.fail(error: user.info.error, response: .fail, value: nil))
-            }
-        }
+        try getUser(username: username, completion: { [weak self] (user) in
+            let url = try! URLs.getUserFollowing(userPk: user.value?.pk, rankToken: HandlerSettings.shared.user!.rankToken, searchQuery: searchQuery, maxId: paginationParameter.nextId)
+            
+            self?.getFollowingList(pk: user.value?.pk, searchQuery: searchQuery, followings: [], url: url, paginationParameter: paginationParameter, completion: { (result) in
+                completion(Return.success(value: result))
+            })
+        })
     }
     
-    fileprivate func getFollowingList(from url: URL, completion: @escaping (Result<UserShortListModel>) -> ()) {
-        HandlerSettings.shared.httpHelper!.sendAsync(method: .get, url: url, body: [:], header: [:]) { (data, response, error) in
-            if let error = error {
-                completion(Return.fail(error: error, response: .fail, value: nil))
+    fileprivate func getFollowingList(pk: Int?, searchQuery: String, followings: [UserShortModel], url: URL, paginationParameter: PaginationParameters, completion: @escaping ([UserShortModel]) -> ()) {
+        var _paginationParameter = paginationParameter
+        HandlerSettings.shared.httpHelper!.sendAsync(method: .get, url: url, body: [:], header: [:]) { [weak self] (data, response, error) in
+            _paginationParameter.pagesLoaded += 1
+            if error != nil {
+                completion(followings)
             } else {
-                if response?.statusCode != 200 {
-                    let error = CustomErrors.unExpected("http error: \(String(describing: response?.statusCode))")
-                    completion(Return.fail(error: error, response: .fail, value: nil))
-                } else {
+                if response?.statusCode == 200 {
+                    var list = followings
                     if let data = data {
                         let decoder = JSONDecoder()
                         decoder.keyDecodingStrategy = .convertFromSnakeCase
                         do {
-                            let list = try decoder.decode(UserShortListModel.self, from: data)
-                            completion(Return.success(value: list))
+                            let decoded = try decoder.decode(UserShortListModel.self, from: data)
+                            list.append(contentsOf: decoded.users!)
+                            if let bigList = decoded.bigList, bigList {
+                                if !(decoded.nextMaxId?.isEmpty ?? true) && paginationParameter.pagesLoaded <= paginationParameter.maxPagesToLoad {
+                                    _paginationParameter.nextId = decoded.nextMaxId ?? ""
+                                    let url = try! URLs.getUserFollowing(userPk: pk, rankToken: HandlerSettings.shared.user!.rankToken, searchQuery: searchQuery, maxId: _paginationParameter.nextId)
+                                    self?.getFollowingList(pk: pk, searchQuery: searchQuery, followings: list, url: url, paginationParameter: _paginationParameter, completion: { (newusers) in
+                                        list.append(contentsOf: newusers)
+                                        completion(newusers)
+                                    })
+                                } else {
+                                    completion(list)
+                                }
+                                
+                            } else {
+                                completion(list)
+                            }
                         } catch {
-                            completion(Return.fail(error: error, response: .ok, value: nil))                        }
-                    } else {
-                        let error = CustomErrors.unExpected("The data couldn’t be read because it is missing error when decoding JSON.")
-                        completion(Return.fail(error: error, response: .ok, value: nil))
+                            completion(list)
+                        }
                     }
+                } else {
+                    completion(followings)
                 }
             }
         }
@@ -764,6 +828,106 @@ class UserHandler: UserHandlerProtocol {
         }
     }
     
+    func removeFollower(userId: Int, completion: @escaping (Result<FollowResponseModel>) -> ()) throws {
+        let body = [
+            "_uuid": HandlerSettings.shared.device!.deviceGuid.uuidString,
+            "_uid": String(HandlerSettings.shared.user!.loggedInUser.pk!),
+            "_csrftoken": HandlerSettings.shared.user!.csrfToken,
+            "user_id": String(userId),
+            "radio_type": "wifi-none"
+        ]
+        
+        HandlerSettings.shared.httpHelper!.sendAsync(method: .post, url: try URLs.removeFollowerUrl(for: userId), body: body, header: [:]) { (data, response, error) in
+            if let error = error {
+                completion(Return.fail(error: error, response: .fail, value: nil))
+            } else {
+                if let data = data {
+                    let decoder = JSONDecoder()
+                    decoder.keyDecodingStrategy = .convertFromSnakeCase
+                    do {
+                        let value = try decoder.decode(FollowResponseModel.self, from: data)
+                        completion(Return.success(value: value))
+                    } catch {
+                        completion(Return.fail(error: error, response: .ok, value: nil))
+                    }
+                }
+            }
+        }
+    }
+    
+    func approveFriendship(userId: Int, completion: @escaping (Result<FollowResponseModel>) -> ()) throws {
+        let body = [
+            "_uuid": HandlerSettings.shared.device!.deviceGuid.uuidString,
+            "_uid": String(HandlerSettings.shared.user!.loggedInUser.pk!),
+            "_csrftoken": HandlerSettings.shared.user!.csrfToken,
+            "user_id": String(userId),
+            "radio_type": "wifi-none"
+        ]
+        
+        HandlerSettings.shared.httpHelper!.sendAsync(method: .post, url: try URLs.approveFriendshipUrl(for: userId), body: body, header: [:]) { (data, response, error) in
+            if let error = error {
+                completion(Return.fail(error: error, response: .fail, value: nil))
+            } else {
+                if let data = data {
+                    let decoder = JSONDecoder()
+                    decoder.keyDecodingStrategy = .convertFromSnakeCase
+                    do {
+                        let value = try decoder.decode(FollowResponseModel.self, from: data)
+                        completion(Return.success(value: value))
+                    } catch {
+                        completion(Return.fail(error: error, response: .ok, value: nil))
+                    }
+                }
+            }
+        }
+    }
+    
+    func rejectFriendship(userId: Int, completion: @escaping (Result<FollowResponseModel>) -> ()) throws {
+        let body = [
+            "_uuid": HandlerSettings.shared.device!.deviceGuid.uuidString,
+            "_uid": String(HandlerSettings.shared.user!.loggedInUser.pk!),
+            "_csrftoken": HandlerSettings.shared.user!.csrfToken,
+            "user_id": String(userId),
+            "radio_type": "wifi-none"
+        ]
+        
+        HandlerSettings.shared.httpHelper!.sendAsync(method: .post, url: try URLs.rejectFriendshipUrl(for: userId), body: body, header: [:]) { (data, response, error) in
+            if let error = error {
+                completion(Return.fail(error: error, response: .fail, value: nil))
+            } else {
+                if let data = data {
+                    let decoder = JSONDecoder()
+                    decoder.keyDecodingStrategy = .convertFromSnakeCase
+                    do {
+                        let value = try decoder.decode(FollowResponseModel.self, from: data)
+                        completion(Return.success(value: value))
+                    } catch {
+                        completion(Return.fail(error: error, response: .ok, value: nil))
+                    }
+                }
+            }
+        }
+    }
+    
+    func pendingFriendships(completion: @escaping (Result<PendingFriendshipsModel>) -> ()) throws {
+        HandlerSettings.shared.httpHelper!.sendAsync(method: .get, url: try URLs.pendingFriendshipsUrl(), body: [:], header: [:]) { (data, response, error) in
+            if let error = error {
+                completion(Return.fail(error: error, response: .fail, value: nil))
+            } else {
+                if let data = data {
+                    let decoder = JSONDecoder()
+                    decoder.keyDecodingStrategy = .convertFromSnakeCase
+                    do {
+                        let value = try decoder.decode(PendingFriendshipsModel.self, from: data)
+                        completion(Return.success(value: value))
+                    } catch {
+                        completion(Return.fail(error: error, response: .ok, value: nil))
+                    }
+                }
+            }
+        }
+    }
+    
     func followUser(userId: Int, completion: @escaping (Result<FollowResponseModel>) -> ()) throws {
         let body = [
             "_uuid": HandlerSettings.shared.device!.deviceGuid.uuidString,
@@ -837,6 +1001,53 @@ class UserHandler: UserHandlerProtocol {
         }
     }
     
+    func getFriendshipStatuses(of userIds: [Int], completion: @escaping (Result<FriendshipStatusesModel>) -> ()) throws {
+        
+        let body = [
+            "_uuid": HandlerSettings.shared.device!.deviceGuid.uuidString,
+            "_uid": String(HandlerSettings.shared.user!.loggedInUser.pk!),
+            "_csrftoken": HandlerSettings.shared.user!.csrfToken,
+            "user_ids": userIds.map{String($0)}.joined(separator: ", "),
+            "radio_type": "wifi-none"
+        ]
+        
+        HandlerSettings.shared.httpHelper!.sendAsync(method: .post, url: try URLs.getFriendshipStatusesUrl(), body: body, header: [:]) { (data, response, error) in
+            if let error = error {
+                completion(Return.fail(error: error, response: .fail, value: nil))
+            } else {
+                if let data = data {
+                    let decoder = JSONDecoder()
+                    decoder.keyDecodingStrategy = .convertFromSnakeCase
+                    do {
+                        let value = try decoder.decode(FriendshipStatusesModel.self, from: data)
+                        completion(Return.success(value: value))
+                    } catch {
+                        completion(Return.fail(error: error, response: .ok, value: nil))
+                    }
+                }
+            }
+        }
+    }
+    
+    func getBlockedList(completion: @escaping (Result<BlockedUsersModel>) -> ()) throws {
+        HandlerSettings.shared.httpHelper!.sendAsync(method: .get, url: try URLs.getBlockedList(), body: [:], header: [:]) { (data, res, err) in
+            if let error = err {
+                completion(Return.fail(error: error, response: .fail, value: nil))
+            } else {
+                if let data = data {
+                    let decoder = JSONDecoder()
+                    decoder.keyDecodingStrategy = .convertFromSnakeCase
+                    do {
+                        let value = try decoder.decode(BlockedUsersModel.self, from: data)
+                        completion(Return.success(value: value))
+                    } catch {
+                        completion(Return.fail(error: error, response: .ok, value: nil))
+                    }
+                }
+            }
+        }
+    }
+    
     func block(userId: Int, completion: @escaping (Result<FollowResponseModel>) -> ()) throws {
         let body = [
             "_uuid": HandlerSettings.shared.device!.deviceGuid.uuidString,
@@ -887,6 +1098,59 @@ class UserHandler: UserHandlerProtocol {
                         completion(Return.fail(error: error, response: .ok, value: nil))
                     }
                 }
+            }
+        }
+    }
+    
+    func recoverAccountBy(username: String, completion: @escaping (Result<AccountRecovery>) -> ()) throws {
+        try recoverAccountBy(email: username) { (result) in
+            completion(result)
+        }
+    }
+    
+    func recoverAccountBy(email: String, completion: @escaping (Result<AccountRecovery>) -> ()) throws {
+        HandlerSettings.shared.httpHelper!.sendAsync(method: .get, url: try URLs.getInstagramUrl(), body: [:], header: [:]) { (data, response, error) in
+            if let error = error {
+                completion(Return.fail(error: error, response: .unknown, value: nil))
+            } else {
+                // find CSRF token
+                let fields = response?.allHeaderFields
+                let cookies = HTTPCookie.cookies(withResponseHeaderFields: fields as! [String : String], for: (response?.url)!)
+                
+                for cookie in cookies {
+                    if cookie.name == "csrftoken" {
+                        HandlerSettings.shared.user!.csrfToken = cookie.value
+                        break
+                    }
+                }
+                
+                let body = [
+                    "query": email,
+                    "adid": UUID.init().uuidString,
+                    "device_id": RequestMessageModel.generateDeviceId(),
+                    "guid": HandlerSettings.shared.device!.deviceGuid.uuidString,
+                    "_csrftoken": HandlerSettings.shared.user!.csrfToken
+                ]
+                
+                HandlerSettings.shared.httpHelper!.sendAsync(method: .post, url: try! URLs.getRecoverByEmailUrl(), body: body, header: [:], completion: { (data, response, error) in
+                    if let error = error {
+                        completion(Return.fail(error: error, response: .fail, value: nil))
+                    } else {
+                        if let data = data {
+                            if response?.statusCode == 200 {
+                                let decoder = JSONDecoder()
+                                do {
+                                    let value = try decoder.decode(AccountRecovery.self, from: data)
+                                    completion(Return.success(value: value))
+                                } catch {
+                                    completion(Return.fail(error: error, response: .ok, value: nil))
+                                }
+                            } else {
+                                completion(Return.fail(error: error, response: .wrongRequest, value: nil))
+                            }
+                        }
+                    }
+                })
             }
         }
     }

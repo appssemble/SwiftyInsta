@@ -15,10 +15,9 @@ public protocol InstagramLoginWebViewDelegate {
     func webViewFinishedToLoadUser(sessionCache : SessionCache, handler: APIHandlerProtocol)
 }
 
-
 public class InstagramLoginWebView: WKCookieWebView {
-    
     public var loginDelegate : InstagramLoginWebViewDelegate?
+    public var redirectCompleted: (() -> ())?
     
     public  override init(frame: CGRect, configurationBlock: ((WKWebViewConfiguration) -> Void)? = nil) {
         super.init(frame: frame, configurationBlock: configurationBlock)
@@ -174,6 +173,17 @@ public class InstagramLoginWebView: WKCookieWebView {
     
     public override func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
         print("URL of Finished::::" + webView.url!.absoluteString)
+        
+        if webView.url!.absoluteString == "https://www.instagram.com/accounts/login/" {
+            let elementID = "MFkQJ ABLKx VhasA _1-msl"
+            let removeElementIdScript = "var element = document.getElementsByClassName('\(elementID)'); element[0].parentElement.removeChild(element[0]);"
+            webView.evaluateJavaScript(removeElementIdScript) { (response, error) in
+            }
+        }
+        
+        if webView.url!.absoluteString == "https://www.instagram.com/" {
+            redirectCompleted?()
+        }
         
         self.fetchCookies(completion: { (cookies) in
             let instagramCookies =  cookies?.getInstagramCookies()

@@ -710,13 +710,7 @@ class UserHandler: UserHandlerProtocol {
     }
 
     func getCurrentUser(completion: @escaping (Result<CurrentUserModel>) -> ()) throws {
-        let body = [
-            "_uuid": HandlerSettings.shared.device!.deviceGuid.uuidString,
-            "_uid": String(format: "%ld", HandlerSettings.shared.user!.loggedInUser.pk!),
-            "_csrftoken": HandlerSettings.shared.user!.csrfToken
-        ]
-        
-        HandlerSettings.shared.httpHelper!.sendAsync(method: .get, url: try URLs.getCurrentUser(), body: body, header: [:]) { (data, response, error) in
+        HandlerSettings.shared.httpHelper!.sendAsync(method: .get, url: try URLs.getCurrentUser(), body: [:], header: [:]) { (data, response, error) in
             if let error = error {
                 completion(Return.fail(error: error, response: .fail, value: nil))
             } else {
